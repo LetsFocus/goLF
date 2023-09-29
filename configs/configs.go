@@ -30,18 +30,8 @@ type Config struct {
 
 type Configs interface {
 	Get(key string) string
-	GetorDefault(key, defaultVal string) string
 }
 
 func (c Config) Get(key string) string {
 	return os.Getenv(key)
-}
-
-func (c Config) GetorDefault(key, defaultVal string) string {
-	val := os.Getenv(key)
-	if val == "" {
-		return defaultVal
-	}
-
-	return val
 }
