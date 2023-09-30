@@ -9,7 +9,7 @@ import (
 
 type GoLF struct {
 	Conn   *sql.DB
-	C      configs.Config
+	Config configs.Config
 	Logger *logger.CustomLogger
 }
 
@@ -20,9 +20,9 @@ func New() GoLF {
 	)
 
 	goLF.Logger = logger.NewCustomLogger()
-	goLF.C = configs.NewConfig(goLF.Logger)
+	goLF.Config = configs.NewConfig(goLF.Logger)
 
-	goLF.Conn, err = database.InitializeDB(goLF.C, "")
+	goLF.Conn, err = database.InitializeDB(goLF.Config, "")
 	if err != nil {
 		return goLF
 	}

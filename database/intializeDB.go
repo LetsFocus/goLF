@@ -7,27 +7,49 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/LetsFocus/goLF/configs"
+	"github.com/LetsFocus/goLF/errors"
 )
 
-type dbConfig struct {
+type config struct {
 	host     string
 	password string
 	user     string
 	port     string
+	dialect  string
 	dbName   string
 }
 
-func InitializeDB(c configs.Config, prefix string) (*sql.DB, error) {
-	configs := dbConfig{host: c.Get(prefix + "DB_HOST"), password: c.Get(prefix + "DB_PASSWORD"),
-		user: c.Get(prefix + "DB_USER"), port: c.Get(prefix + "DB_PORT"), dbName: c.Get(prefix + "DB_NAME")}
+func InitializeDB(configs configs.Config, prefix string) (*sql.DB, error) {
+	c := config{host: configs.Get(prefix + "DB_HOST"), password: configs.Get(prefix + "DB_PASSWORD"),
+		user: configs.Get(prefix + "DB_USER"), port: configs.Get(prefix + "DB_PORT"), dbName: configs.Get(prefix + "DB_NAME")}
 
-	dsn := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable", configs.user, configs.password, configs.host, configs.port, configs.dbName)
-	db, err := sql.Open("postgres", dsn)
+	connectionString := generateConnectionString(c)
+	if connectionString == "" {
+		return nil, errors.Errors{StatusCode: 500, Code: "Invalid Dialect", Reason: "invalid dialect given"}
+	}
+
+	db, err := sql.Open(c.dialect, connectionString)
 	if err != nil {
-		c.Log.Errorf("Failed to initialize the DB, Error:%v", err)
+		configs.Log.Errorf("Failed to initialize the DB, Error:%v", err)
 		return nil, err
 	}
 
-	c.Log.Info("database is connected successfully")
+	err = db.Ping()
+	if err != nil {
+		configs.Log.Errorf("Failed to initialize the DB, Error:%v", err)
+		return nil, err
+	}
+
+	configs.Log.Info("database is connected successfully")
 	return db, nil
+}
+
+func generateConnectionString(c config) string {
+	switch c.dialect {
+	case "mysql":
+	case "postgres":
+		return fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable", c.user, c.password, c.host, c.port, c.dbName)
+	}
+
+	return ""
 }

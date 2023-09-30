@@ -1,4 +1,4 @@
-package goLF
+package service
 
 import (
 	"bytes"

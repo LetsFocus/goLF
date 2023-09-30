@@ -1,10 +1,11 @@
 package configs
 
 import (
-	"github.com/LetsFocus/goLF/logger"
 	"os"
 
 	"github.com/joho/godotenv"
+
+	"github.com/LetsFocus/goLF/logger"
 )
 
 func NewConfig(log *logger.CustomLogger) Config {

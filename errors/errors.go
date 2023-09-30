@@ -2,9 +2,10 @@ package errors
 
 import (
 	"fmt"
-	"github.com/LetsFocus/goLF/logger"
 	"net/http"
 	"strings"
+
+	"github.com/LetsFocus/goLF/logger"
 )
 
 type Errors struct {
@@ -64,6 +65,6 @@ func EntityNotFound(entity, id string) error {
 	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: fmt.Sprintf("no %v found for %v", entity, id)}
 }
 
-func UnMarshalError(entity, id string) error {
+func UnMarshalError() error {
 	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: fmt.Sprintf("incorrect data format")}
 }
