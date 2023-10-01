@@ -21,7 +21,8 @@ type config struct {
 
 func InitializeDB(configs configs.Config, prefix string) (*sql.DB, error) {
 	c := config{host: configs.Get(prefix + "DB_HOST"), password: configs.Get(prefix + "DB_PASSWORD"),
-		user: configs.Get(prefix + "DB_USER"), port: configs.Get(prefix + "DB_PORT"), dbName: configs.Get(prefix + "DB_NAME")}
+		user: configs.Get(prefix + "DB_USER"), port: configs.Get(prefix + "DB_PORT"), dialect: configs.Get(prefix + "DB_DIALECT"),
+		dbName: configs.Get(prefix + "DB_NAME")}
 
 	connectionString := generateConnectionString(c)
 	if connectionString == "" {
