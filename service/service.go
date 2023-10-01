@@ -5,14 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/LetsFocus/goLF/errors"
-	logger2 "github.com/LetsFocus/goLF/logger"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
+	"github.com/LetsFocus/goLF/errors"
+	logger "github.com/LetsFocus/goLF/logger"
 )
 
 const interval = 5
@@ -20,7 +22,7 @@ const interval = 5
 type Client struct {
 	*http.Client
 	url           string
-	logger        *logger2.CustomLogger
+	logger        *logger.CustomLogger
 	headerKeys    []string
 	customHeaders map[string]string
 }
@@ -31,7 +33,7 @@ type HTTPResponse struct {
 	headers    http.Header
 }
 
-func NewClient(resourceAddr string, logger *logger2.CustomLogger) *Client {
+func NewClient(resourceAddr string, logger *logger.CustomLogger) *Client {
 	if resourceAddr == "" {
 		logger.Info("value for resourceAddress is empty")
 	} else {
@@ -49,7 +51,8 @@ func NewClient(resourceAddr string, logger *logger2.CustomLogger) *Client {
 	return httpSvc
 }
 
-func (c *Client) Call(ctx context.Context, method, target string, params map[string]interface{}, body []byte, headers map[string]string) (HTTPResponse, error) {
+func (c *Client) call(ctx context.Context, method, target string, params map[string]interface{},
+	body []byte, headers map[string]string) (HTTPResponse, error) {
 	target = strings.TrimLeft(target, "/")
 	correlationID, _ := ctx.Value("correlationID").(string)
 	c.logger.Infof("correlationID for the request is %v", correlationID)
@@ -73,7 +76,8 @@ func (c *Client) Call(ctx context.Context, method, target string, params map[str
 	return HTTPResponse{StatusCode: resp.StatusCode, Body: byteData, headers: resp.Header}, nil
 }
 
-func (c *Client) createRequest(ctx context.Context, method, target string, params map[string]interface{}, body []byte, headers map[string]string) (*http.Request, error) {
+func (c *Client) createRequest(ctx context.Context, method, target string, params map[string]interface{},
+	body []byte, headers map[string]string) (*http.Request, error) {
 	uri := c.url + "/" + target
 
 	if target == "" {
@@ -82,7 +86,8 @@ func (c *Client) createRequest(ctx context.Context, method, target string, param
 
 	req, err := http.NewRequestWithContext(ctx, method, uri, bytes.NewBuffer(body))
 	if err != nil {
-		return nil, errors.Errors{StatusCode: http.StatusInternalServerError}
+		return nil, errors.Errors{StatusCode: http.StatusInternalServerError,
+			Code: http.StatusText(http.StatusInternalServerError), Reason: err.Error()}
 	}
 
 	req.Header.Add("content-type", "application/json")
@@ -126,4 +131,49 @@ func (c *Client) Bind(data []byte, i interface{}) error {
 	}
 
 	return nil
+}
+
+func (c *Client) Get(ctx *gin.Context, target string, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
+	resp, err := c.call(ctx, http.MethodGet, target, params, nil, headers)
+	if err != nil {
+		return HTTPResponse{}, err
+	}
+
+	return resp, nil
+}
+
+func (c *Client) Post(ctx *gin.Context, target string, body []byte, headers map[string]string) (HTTPResponse, error) {
+	resp, err := c.call(ctx, http.MethodPost, target, nil, body, headers)
+	if err != nil {
+		return HTTPResponse{}, err
+	}
+
+	return resp, nil
+}
+
+func (c *Client) Put(ctx *gin.Context, target string, body []byte, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
+	resp, err := c.call(ctx, http.MethodPut, target, params, body, headers)
+	if err != nil {
+		return HTTPResponse{}, err
+	}
+
+	return resp, nil
+}
+
+func (c *Client) Patch(ctx *gin.Context, target string, body []byte, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
+	resp, err := c.call(ctx, http.MethodPut, target, params, body, headers)
+	if err != nil {
+		return HTTPResponse{}, err
+	}
+
+	return resp, nil
+}
+
+func (c *Client) Delete(ctx *gin.Context, target string, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
+	resp, err := c.call(ctx, http.MethodDelete, target, params, nil, headers)
+	if err != nil {
+		return HTTPResponse{}, err
+	}
+
+	return resp, nil
 }
