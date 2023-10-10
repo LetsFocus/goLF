@@ -1,7 +1,9 @@
 package validations
 
 import (
+	"math/rand"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,4 +42,51 @@ func IsValidTime(timeStr string) bool {
 func IsValidDate(dateStr string) bool {
 	_, err := time.Parse("2006-01-02", dateStr)
 	return err == nil
+}
+
+// RemoveSliceDuplicates revomes the duplicate elements in a slice.
+func RemoveSliceDuplicates[T comparable](slice []T) []T {
+	encountered := map[T]bool{}
+	result := []T{}
+
+	for v := range slice {
+		if encountered[slice[v]] == false {
+			encountered[slice[v]] = true
+			result = append(result, slice[v])
+		}
+	}
+	return result
+}
+
+// RemoveSliceElement removes a particular element in a slice based on index
+func RemoveSliceElement[T comparable](slice []T, index int) []T {
+	result := []T{}
+	if index < len(slice)-1 {
+		result = append(slice[:index], slice[index+1:]...)
+	}
+	if index == len(slice)-1 {
+		result = append(slice[:index])
+	}
+	return result
+}
+
+// StrToInt converts string to integer return in a val, err format
+func StrToInt(s string) (int, error) {
+	val, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, err
+	}
+	return val, nil
+}
+
+// IntToStr converts integer to string
+func IntToStr(value int) string {
+	val := strconv.Itoa(value)
+	return val
+
+}
+
+// RendInt return a random integer from the range[0,n]
+func RandInt(a int) int {
+	return rand.Intn(a)
 }
