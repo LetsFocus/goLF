@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/LetsFocus/goLF/errors"
@@ -133,7 +132,7 @@ func (c *Client) Bind(data []byte, i interface{}) error {
 	return nil
 }
 
-func (c *Client) Get(ctx *gin.Context, target string, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
+func (c *Client) Get(ctx context.Context, target string, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
 	resp, err := c.call(ctx, http.MethodGet, target, params, nil, headers)
 	if err != nil {
 		return HTTPResponse{}, err
@@ -142,7 +141,7 @@ func (c *Client) Get(ctx *gin.Context, target string, params map[string]interfac
 	return resp, nil
 }
 
-func (c *Client) Post(ctx *gin.Context, target string, body []byte, headers map[string]string) (HTTPResponse, error) {
+func (c *Client) Post(ctx context.Context, target string, body []byte, headers map[string]string) (HTTPResponse, error) {
 	resp, err := c.call(ctx, http.MethodPost, target, nil, body, headers)
 	if err != nil {
 		return HTTPResponse{}, err
@@ -151,7 +150,7 @@ func (c *Client) Post(ctx *gin.Context, target string, body []byte, headers map[
 	return resp, nil
 }
 
-func (c *Client) Put(ctx *gin.Context, target string, body []byte, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
+func (c *Client) Put(ctx context.Context, target string, body []byte, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
 	resp, err := c.call(ctx, http.MethodPut, target, params, body, headers)
 	if err != nil {
 		return HTTPResponse{}, err
@@ -160,8 +159,8 @@ func (c *Client) Put(ctx *gin.Context, target string, body []byte, params map[st
 	return resp, nil
 }
 
-func (c *Client) Patch(ctx *gin.Context, target string, body []byte, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
-	resp, err := c.call(ctx, http.MethodPut, target, params, body, headers)
+func (c *Client) Patch(ctx context.Context, target string, body []byte, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
+	resp, err := c.call(ctx, http.MethodPatch, target, params, body, headers)
 	if err != nil {
 		return HTTPResponse{}, err
 	}
@@ -169,7 +168,7 @@ func (c *Client) Patch(ctx *gin.Context, target string, body []byte, params map[
 	return resp, nil
 }
 
-func (c *Client) Delete(ctx *gin.Context, target string, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
+func (c *Client) Delete(ctx context.Context, target string, params map[string]interface{}, headers map[string]string) (HTTPResponse, error) {
 	resp, err := c.call(ctx, http.MethodDelete, target, params, nil, headers)
 	if err != nil {
 		return HTTPResponse{}, err
