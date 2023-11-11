@@ -13,19 +13,23 @@ type Keys struct {
 	PublicKey  *rsa.PublicKey
 }
 
-func CreateJWTToken(algorithm, subject string, header, data map[string]string, keys Keys) (string, error) {
+func CreateJWTToken(algorithm, subject string, header, data map[string]interface{}, keys Keys) (string, error) {
 	switch algorithm {
 	case "RSA":
 		token := jwt.New(jwt.SigningMethodRS512)
 
 		claims := token.Claims.(jwt.MapClaims)
 
-		for key, value := range header {
-			claims[key] = value
+		if header != nil {
+			for key, value := range header {
+				claims[key] = value
+			}
 		}
 
-		for key, value := range data {
-			claims[key] = value
+		if data != nil {
+			for key, value := range data {
+				claims[key] = value
+			}
 		}
 
 		claims["sub"] = subject
@@ -43,7 +47,7 @@ func CreateJWTToken(algorithm, subject string, header, data map[string]string, k
 	return "", nil
 }
 
-func GetPrivateKey(privateKeyString string) (*rsa.PrivateKey, error) {
+func GetRSAPrivateKey(privateKeyString string) (*rsa.PrivateKey, error) {
 	pemPrivateKey := "-----BEGIN PRIVATE KEY-----\n" + privateKeyString + "\n-----END PRIVATE KEY-----"
 	decodedPrivateKey := []byte(pemPrivateKey)
 
@@ -88,4 +92,17 @@ func ValidateJWTToken(refreshToken string, publicKey *rsa.PublicKey) (map[string
 	}
 
 	return claimsData, nil
+}
+
+func GetRSAPublicKey(publicKeyString string) (*rsa.PublicKey, error) {
+	pemPublicKey := "-----BEGIN PUBLIC KEY-----\n" + publicKeyString + "\n-----END PUBLIC KEY-----"
+	decodedPublicKey := []byte(pemPublicKey)
+
+	key, err := jwt.ParseRSAPublicKeyFromPEM(decodedPublicKey)
+	if err != nil {
+		return nil, &errors.Errors{StatusCode: http.StatusBadRequest,
+			Code: http.StatusText(http.StatusBadRequest), Reason: "invalid PublicKey " + err.Error()}
+	}
+
+	return key, nil
 }

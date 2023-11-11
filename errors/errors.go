@@ -19,23 +19,20 @@ func (e Errors) Error() string {
 }
 
 func InvalidParam(err []string) error {
-	reason := fmt.Sprintf("parameter "+strings.Join(err, ",")+" is invalid", err)
+	reason := fmt.Sprintf("parameter " + strings.Join(err, ",") + " is invalid")
 
-	logger.NewCustomLogger().Errorf("Invalid Parameter: %v", strings.Join(err, ","))
 	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: reason}
 }
 
 func MissingParam(err []string) error {
 	reason := fmt.Sprintf("parameter " + strings.Join(err, ",") + " is required")
 
-	logger.NewCustomLogger().Errorf("Missing Parameter: %v", strings.Join(err, ","))
 	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: reason}
 }
 
 func MissingHeaders(err []string) error {
 	reason := fmt.Sprintf("parameter " + strings.Join(err, ",") + " is required in header")
 
-	logger.NewCustomLogger().Errorf("Missing Headers: %v", strings.Join(err, ","))
 	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: reason}
 }
 
@@ -57,12 +54,11 @@ func RowsAffectedError(err error) error {
 }
 
 func InvalidBody() error {
-	logger.NewCustomLogger().Errorf("Invalid Body")
 	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: "invalid body"}
 }
 
 func EntityNotFound(entity, id string) error {
-	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: fmt.Sprintf("no %v found for %v", entity, id)}
+	return Errors{StatusCode: http.StatusNotFound, Code: http.StatusText(http.StatusNotFound), Reason: fmt.Sprintf("no %v found for %v", entity, id)}
 }
 
 func UnMarshalError() error {
