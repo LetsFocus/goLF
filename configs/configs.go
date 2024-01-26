@@ -16,7 +16,7 @@ func NewConfig(log *logger.CustomLogger) Config {
 	} else {
 		envPath = "./config/.env"
 	}
-
+	
 	if err := godotenv.Load(envPath); err != nil {
 		log.Error("No .env file found")
 	}
