@@ -47,7 +47,7 @@ func InitializeES(configs configs.Config, prefix string, retryCounter int) (*ela
 	if err != nil {
 		configs.Log.Errorf("Failed to initialize the Elasticsearch client: %v", err)
 		if cfg.retry > 0 {
-			InitializeES(configs, prefix, retryCounter-1)
+			return InitializeES(configs, prefix, retryCounter-1)
 		}
 
 		return nil, err
@@ -57,7 +57,7 @@ func InitializeES(configs configs.Config, prefix string, retryCounter int) (*ela
 	if err != nil {
 		configs.Log.Errorf("Failed to initialize the Elasticsearch client: %v", err)
 		if cfg.retry > 0 {
-			InitializeES(configs, prefix, retryCounter-1)
+			return InitializeES(configs, prefix, retryCounter-1)
 		}
 
 		return nil, err
