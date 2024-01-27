@@ -32,10 +32,10 @@ func cleanAddresses(addressesString string) []string {
 
 func InitializeES(configs configs.Config, prefix string, retryCounter int) (*elasticsearch.Client, error) {
 	cfg := config{
-		addresses: cleanAddresses(configs.Get(prefix + "ELASTIC_ADDRESSES")),
-		user:      configs.Get(prefix + "ELASTIC_USER"),
-		password:  configs.Get(prefix + "ELASTIC_PASSWORD"),
-		retry: retryCounter,
+		addresses: cleanAddresses(configs.Get(prefix + "ELASTICSEARCH_ADDRESSES")),
+		user:      configs.Get(prefix + "ELASTICSEARCH_USER"),
+		password:  configs.Get(prefix + "ELASTICSEARCH_PASSWORD"),
+		retry:     retryCounter,
 	}
 
 	es, err := elasticsearch.NewClient(
@@ -43,7 +43,7 @@ func InitializeES(configs configs.Config, prefix string, retryCounter int) (*ela
 			Addresses: cfg.addresses,
 			Username:  cfg.user,
 			Password:  cfg.password,
-	})
+		})
 	if err != nil {
 		configs.Log.Errorf("Failed to initialize the Elasticsearch client: %v", err)
 		if cfg.retry > 0 {
@@ -52,7 +52,7 @@ func InitializeES(configs configs.Config, prefix string, retryCounter int) (*ela
 
 		return nil, err
 	}
-	
+
 	_, err = es.Info()
 	if err != nil {
 		configs.Log.Errorf("Failed to initialize the Elasticsearch client: %v", err)

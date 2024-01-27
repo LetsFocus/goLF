@@ -1,8 +1,9 @@
 package goLF
 
 import (
-	"strconv"
 	"database/sql"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8"
 
 	"github.com/LetsFocus/goLF/configs"
@@ -11,36 +12,32 @@ import (
 	"github.com/LetsFocus/goLF/logger"
 )
 
-type GoLF struct {
-	Conn   *sql.DB
+type Databases struct {
+	Postgre *sql.DB
 	Elastic *elasticsearch.Client
-	Config configs.Config
-	Logger *logger.CustomLogger
 }
 
-func New() (GoLF, error) {
-	var (
-		goLF GoLF
-		err  error
-	)
+type GoLF struct {
+	Conn    Databases
+	Config  configs.Config
+	Logger  *logger.CustomLogger
+}
+
+func New() GoLF {
+	var goLF GoLF
 
 	goLF.Logger = logger.NewCustomLogger()
 	goLF.Config = configs.NewConfig(goLF.Logger)
 
-	goLF.Conn, err = database.InitializeDB(goLF.Config, "")
-	if err != nil {
-		return goLF, err
+	goLF.Conn.Postgre, _ = database.InitializeDB(goLF.Config, "")
+	
+	retry := goLF.Config.Get("" + "ELASTICSEARCH_RETRY")
+	retryCounter, err := strconv.Atoi(retry)
+	if err!=nil{
+		retryCounter = 5
 	}
 
-	retryCounter, err := strconv.Atoi(goLF.Config.Get(""+"ELASTIC_RETRY"))
-	if err != nil {
-		return goLF, err
-	}
+	goLF.Conn.Elastic, _ = elasticstack.InitializeES(goLF.Config, "", retryCounter)
 
-	goLF.Elastic, err = elasticstack.InitializeES(goLF.Config, "", retryCounter)
-	if err != nil {
-		return goLF, err
-	}
-
-	return goLF, nil
+	return goLF
 }
