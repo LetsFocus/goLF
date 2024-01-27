@@ -3,6 +3,7 @@ package goLF
 import (
 	"database/sql"
 	"strconv"
+	"time"
 
 	"github.com/elastic/go-elasticsearch/v8"
 
@@ -38,6 +39,21 @@ func New() GoLF {
 	}
 
 	goLF.Conn.Elastic, _ = elasticstack.InitializeES(goLF.Config, "", retryCounter)
-
 	return goLF
+}
+
+func Monitor(goLF *GoLF) {
+	ticker := time.NewTicker(1 * time.Second)
+    defer ticker.Stop()
+
+	retry := goLF.Config.Get("" + "ELASTICSEARCH_RETRY")
+	retryCounter, err := strconv.Atoi(retry)
+	if err!=nil{
+		retryCounter = 5
+	}
+	
+	goLF.Config.Log.Info("Monitoring elasting search cluster...")
+	for range ticker.C{
+		goLF.Conn.Elastic, _ = elasticstack.MonitorES(goLF.Config, goLF.Conn.Elastic, "", retryCounter)
+    }
 }

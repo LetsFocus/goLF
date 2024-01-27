@@ -67,3 +67,16 @@ func InitializeES(configs configs.Config, prefix string, retryCounter int) (*ela
 
 	return es, nil
 }
+
+func MonitorES(configs configs.Config, es *elasticsearch.Client,prefix string, retryCounter int) (*elasticsearch.Client, error) {
+	_, err := es.Info()
+	if err != nil {
+		configs.Log.Errorf("Connection with elastic search interrupted: %v", err)
+		es, err := InitializeES(configs, prefix, retryCounter)
+		return es, err
+	}
+
+	return es, nil
+}
+
+

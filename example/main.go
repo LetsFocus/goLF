@@ -5,5 +5,6 @@ import (
 )
 
 func main() {
-	_ = goLF.New()
+	golf := goLF.New()
+	goLF.Monitor(&golf)
 }
