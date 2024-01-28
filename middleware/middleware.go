@@ -2,12 +2,11 @@ package middleware
 
 import (
 	"context"
+	"github.com/LetsFocus/goLF/logger"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
-
-	"github.com/LetsFocus/goLF/logger"
 )
 
 func CORS(handler http.Handler) http.Handler {

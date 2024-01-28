@@ -1,20 +1,19 @@
 package configs
 
 import (
+	"github.com/LetsFocus/goLF/logger"
 	"os"
 
 	"github.com/joho/godotenv"
-
-	"github.com/LetsFocus/goLF/logger"
 )
 
 func NewConfig(log *logger.CustomLogger) Config {
 	env := os.Getenv("APP_ENV")
 	envPath := ""
 	if env != "" {
-		envPath = "./config/." + env + ".env"
+		envPath = "./configs/." + env + ".env"
 	} else {
-		envPath = "./config/.env"
+		envPath = "./configs/.env"
 	}
 
 	if err := godotenv.Load(envPath); err != nil {
