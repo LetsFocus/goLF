@@ -1,9 +1,9 @@
 package configs
 
 import (
-	"github.com/LetsFocus/goLF/logger"
 	"os"
 
+	"github.com/LetsFocus/goLF/logger"
 	"github.com/joho/godotenv"
 )
 

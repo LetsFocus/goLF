@@ -3,35 +3,38 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"github.com/LetsFocus/goLF/errors"
-	"github.com/LetsFocus/goLF/goLF/model"
 	"net/http"
 	"strconv"
 	"time"
 
 	_ "github.com/lib/pq"
+
+	"github.com/LetsFocus/goLF/errors"
+	"github.com/LetsFocus/goLF/goLF/model"
+	"github.com/LetsFocus/goLF/logger"
 )
 
 type dbConfig struct {
-	host             string
-	password         string
-	user             string
-	port             string
-	dialect          string
-	dbName           string
-	maxOpenConns     int
-	maxIdleConns     int
-	connMaxLifeTime  int
-	monitoringEnable bool
-	retry            int
-	retryDuration    int
+	host                  string
+	password              string
+	user                  string
+	port                  string
+	dialect               string
+	dbName                string
+	maxOpenConns          int
+	maxIdleConns          int
+	connMaxLifeTime       int
+	idleConnectionTimeout int
+	monitoringEnable      bool
+	retry                 int
+	retryDuration         int
 }
 
 func InitializeDB(golf model.GoLF, prefix string) {
 	var (
-		maxConnections, maxIdleConnections, connectionMaxLifeTime, retry, retryTime int
-		monitoring                                                                  bool
-		err                                                                         error
+		maxConnections, maxIdleConnections, connectionMaxLifeTime, idleConnectionTimeout, retry, retryTime int
+		monitoring                                                                                         bool
+		err                                                                                                error
 	)
 
 	maxIdleConnections, err = strconv.Atoi(golf.Config.Get(prefix + "DB_MAX_IDLE_CONNECTIONS"))
@@ -47,6 +50,11 @@ func InitializeDB(golf model.GoLF, prefix string) {
 	connectionMaxLifeTime, err = strconv.Atoi(golf.Config.Get(prefix + "DB_CONNECTIONS_MAX_LIFETIME"))
 	if err != nil {
 		connectionMaxLifeTime = 15
+	}
+
+	idleConnectionTimeout, err = strconv.Atoi(golf.Config.Get(prefix + "DB_IDLE_CONNECTION_TIMEOUT"))
+	if err != nil {
+		idleConnectionTimeout = 10
 	}
 
 	monitoring, err = strconv.ParseBool(golf.Config.Get(prefix + "DB_MONITORING"))
@@ -65,24 +73,26 @@ func InitializeDB(golf model.GoLF, prefix string) {
 	}
 
 	c := dbConfig{
-		host:             golf.Config.Get(prefix + "DB_HOST"),
-		password:         golf.Config.Get(prefix + "DB_PASSWORD"),
-		user:             golf.Config.Get(prefix + "DB_USER"),
-		port:             golf.Config.Get(prefix + "DB_PORT"),
-		dialect:          golf.Config.Get(prefix + "DB_DIALECT"),
-		dbName:           golf.Config.Get(prefix + "DB_NAME"),
-		maxOpenConns:     maxConnections,
-		maxIdleConns:     maxIdleConnections,
-		connMaxLifeTime:  connectionMaxLifeTime,
-		monitoringEnable: monitoring,
+		host:                  golf.Config.Get(prefix + "DB_HOST"),
+		password:              golf.Config.Get(prefix + "DB_PASSWORD"),
+		user:                  golf.Config.Get(prefix + "DB_USER"),
+		port:                  golf.Config.Get(prefix + "DB_PORT"),
+		dialect:               golf.Config.Get(prefix + "DB_DIALECT"),
+		dbName:                golf.Config.Get(prefix + "DB_NAME"),
+		maxOpenConns:          maxConnections,
+		maxIdleConns:          maxIdleConnections,
+		connMaxLifeTime:       connectionMaxLifeTime,
+		idleConnectionTimeout: idleConnectionTimeout,
+		monitoringEnable:      monitoring,
 	}
 
 	if c.host != "" && c.port != "" && c.user != "" && c.password != "" && c.dialect != "" {
-		db, err := establishDBConnection(golf, c)
+		db, err := establishDBConnection(golf.Logger, c)
 		if err == nil {
 			db.SetMaxOpenConns(c.maxOpenConns)
 			db.SetMaxIdleConns(c.maxIdleConns)
 			db.SetConnMaxLifetime(time.Minute * time.Duration(c.maxOpenConns))
+			db.SetConnMaxIdleTime(time.Minute * time.Duration(c.idleConnectionTimeout))
 
 			golf.Conn = db
 
@@ -100,23 +110,39 @@ func monitoringDB(golf model.GoLF, c dbConfig, retry, retryTime int) {
 		retryCounter int
 	)
 
+monitoringLoop:
 	for {
 		select {
 		case <-ticker.C:
 			if err = golf.Conn.Ping(); err != nil {
-				db, err = establishDBConnection(golf, c)
-				if err != nil {
-					time.Sleep(time.Second * time.Duration(retryTime))
-					golf.Logger.Error("DB Retrying failed")
-				}
+				if retryCounter < retry {
+					for i := 0; i < retry; i++ {
+						db, err = establishDBConnection(golf.Logger, c)
+						if err == nil {
+							golf.Conn = db
+							retryCounter = 0
 
-				golf.Conn = db
+							break
+						}
+
+						retryCounter++
+						time.Sleep(time.Second * time.Duration(retryTime))
+						golf.Logger.Errorf("DB Retry %d failed: %v", i+1, err)
+					}
+				} else {
+					break monitoringLoop
+				}
+			} else {
+				retryCounter = 0
 			}
 		}
 	}
+
+	ticker.Stop()
+	golf.Logger.Errorf("DB Monitoring stopped after reaching maximum retries. Error for DB breakdown is %v", err)
 }
 
-func generateConnectionString(c dbConfig) string {
+func GenerateConnectionString(c dbConfig) string {
 	switch c.dialect {
 	case "mysql":
 	case "postgres":
@@ -126,26 +152,26 @@ func generateConnectionString(c dbConfig) string {
 	return ""
 }
 
-func establishDBConnection(golf model.GoLF, c dbConfig) (*sql.DB, error) {
-	connectionString := generateConnectionString(c)
+func establishDBConnection(log *logger.CustomLogger, c dbConfig) (*sql.DB, error) {
+	connectionString := GenerateConnectionString(c)
 	if connectionString == "" {
-		golf.Logger.Error("invalid dialect given")
+		log.Error("invalid dialect given")
 		return nil, errors.Errors{StatusCode: http.StatusInternalServerError, Code: http.StatusText(http.StatusInternalServerError),
 			Reason: "Invalid dialect"}
 	}
 
 	db, err := sql.Open(c.dialect, connectionString)
 	if err != nil {
-		golf.Logger.Errorf("Failed to initialize the DB, Error:%v", err)
+		log.Errorf("Failed to initialize the DB, Error:%v", err)
 		return db, err
 	}
 
 	err = db.Ping()
 	if err != nil {
-		golf.Logger.Errorf("Failed to ping the DB, Error:%v", err)
+		log.Errorf("Failed to ping the DB, Error:%v", err)
 		return db, err
 	}
 
-	golf.Logger.Info("database is connected successfully")
+	log.Info("database is connected successfully")
 	return db, nil
 }
