@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/LetsFocus/goLF/configs"
 	"github.com/LetsFocus/goLF/logger"
+	"github.com/redis/go-redis/v9"
 )
 
 type GoLF struct {
@@ -14,4 +15,5 @@ type GoLF struct {
 
 type Database struct {
 	Postgres *sql.DB
+	Redis    *redis.Client
 }
