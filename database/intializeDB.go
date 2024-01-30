@@ -21,6 +21,7 @@ type dbConfig struct {
 	port                  string
 	dialect               string
 	dbName                string
+	sslMode               string
 	maxOpenConns          int
 	maxIdleConns          int
 	connMaxLifeTime       int
@@ -30,7 +31,7 @@ type dbConfig struct {
 	retryDuration         int
 }
 
-func InitializeDB(golf model.GoLF, prefix string) {
+func InitializeDB(golf *model.GoLF, prefix string) {
 	var (
 		maxConnections, maxIdleConnections, connectionMaxLifeTime, idleConnectionTimeout, retry, retryTime int
 		monitoring                                                                                         bool
@@ -79,6 +80,7 @@ func InitializeDB(golf model.GoLF, prefix string) {
 		port:                  golf.Config.Get(prefix + "DB_PORT"),
 		dialect:               golf.Config.Get(prefix + "DB_DIALECT"),
 		dbName:                golf.Config.Get(prefix + "DB_NAME"),
+		sslMode:               golf.Config.Get(prefix + "DB_SSL"),
 		maxOpenConns:          maxConnections,
 		maxIdleConns:          maxIdleConnections,
 		connMaxLifeTime:       connectionMaxLifeTime,
@@ -87,6 +89,10 @@ func InitializeDB(golf model.GoLF, prefix string) {
 	}
 
 	if c.host != "" && c.port != "" && c.user != "" && c.password != "" && c.dialect != "" {
+		if c.sslMode == "" {
+			c.sslMode = "disable"
+		}
+
 		db, err := establishDBConnection(golf.Logger, c)
 		if err == nil {
 			db.SetMaxOpenConns(c.maxOpenConns)
@@ -94,14 +100,14 @@ func InitializeDB(golf model.GoLF, prefix string) {
 			db.SetConnMaxLifetime(time.Minute * time.Duration(c.maxOpenConns))
 			db.SetConnMaxIdleTime(time.Minute * time.Duration(c.idleConnectionTimeout))
 
-			golf.Conn = db
+			golf.Postgres = db
 
 			go monitoringDB(golf, c, retry, retryTime)
 		}
 	}
 }
 
-func monitoringDB(golf model.GoLF, c dbConfig, retry, retryTime int) {
+func monitoringDB(golf *model.GoLF, c dbConfig, retry, retryTime int) {
 	ticker := time.NewTicker(time.Second)
 
 	var (
@@ -114,12 +120,12 @@ monitoringLoop:
 	for {
 		select {
 		case <-ticker.C:
-			if err = golf.Conn.Ping(); err != nil {
+			if err = golf.Postgres.Ping(); err != nil {
 				if retryCounter < retry {
 					for i := 0; i < retry; i++ {
 						db, err = establishDBConnection(golf.Logger, c)
 						if err == nil {
-							golf.Conn = db
+							golf.Postgres = db
 							retryCounter = 0
 
 							break
@@ -146,7 +152,7 @@ func GenerateConnectionString(c dbConfig) string {
 	switch c.dialect {
 	case "mysql":
 	case "postgres":
-		return fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable", c.user, c.password, c.host, c.port, c.dbName)
+		return fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", c.user, c.password, c.host, c.port, c.dbName, c.sslMode)
 	}
 
 	return ""

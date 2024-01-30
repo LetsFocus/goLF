@@ -7,7 +7,11 @@ import (
 )
 
 type GoLF struct {
-	Conn   *sql.DB
+	Database
 	Config configs.Config
 	Logger *logger.CustomLogger
+}
+
+type Database struct {
+	Postgres *sql.DB
 }
