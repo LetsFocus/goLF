@@ -5,14 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/LetsFocus/goLF/errors"
-	"github.com/LetsFocus/goLF/logger"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
+	"github.com/LetsFocus/goLF/errors"
+	"github.com/LetsFocus/goLF/logger"
 )
 
 const interval = 5
