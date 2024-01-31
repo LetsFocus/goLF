@@ -1,6 +1,6 @@
 module github.com/LetsFocus/goLF
 
-go 1.19.0
+go 1.19
 
 require (
 	github.com/fatih/color v1.15.0

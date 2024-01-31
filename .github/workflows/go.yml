@@ -1,0 +1,97 @@
+name: workflow-pipeline
+
+on:
+  pull_request:
+    branches:
+      - master
+      - development
+  push:
+    branches:
+      - development
+      - master
+ 
+jobs:
+  Unit-Tests:
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+        ports:
+          - 9200:9200
+        options: -e "discovery.type=single-node"
+        
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.19'
+          cache-dependency-path: go.sum
+
+      - name: Install dependencies
+        run: |
+          go get -v -t -d ./...
+
+      - name: Make Directory
+        run: mkdir build
+
+      - name: Test cases check
+        run: |
+          go test ./... -v -coverprofile build/coverage.out  grep -v "mock_interface"  -coverpkg=./...\
+
+      - name: Coverage Report
+        run: go tool cover -func build/coverage.out
+
+      - name: Coverage Check
+        run: |
+          COVERAGE_THRESHOLD=70.0
+          ACTUAL_COVERAGE=$(go tool cover -func=build/coverage.out | grep "total" | awk '{print $3}' | tr -d "%")
+          if [ "$(echo "$ACTUAL_COVERAGE < $COVERAGE_THRESHOLD" | bc)" -eq 1 ]; then
+          echo "Coverage is less than $COVERAGE_THRESHOLD%"
+          exit 1
+          else
+          echo "Coverage is greater than or equal to $COVERAGE_THRESHOLD%"
+          fi
+          
+  Quality-Check:
+    name: Linters Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.19'
+          cache-dependency-path: go.sum
+
+      - name: Install dependencies
+        run: |
+          go get -v -t -d ./...
+
+      - name: Install golangci-lint
+        run: |
+          curl -sfl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.50.1
+           golangci-lint --version
+
+      - name: Linters check
+        run: golangci-lint run
