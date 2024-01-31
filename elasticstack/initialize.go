@@ -75,8 +75,6 @@ func MonitorES(configs configs.Config, es *elasticsearch.Client,prefix string, r
 		es, err := InitializeES(configs, prefix, retryCounter)
 		return es, err
 	}
-
+	
 	return es, nil
 }
-
-
