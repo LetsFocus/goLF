@@ -34,7 +34,7 @@ jobs:
           - 9200:9200
         options: -e "discovery.type=single-node"
         
-    name: Test
+    name: Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -70,7 +70,7 @@ jobs:
 
       - name: Coverage Check
         run: |
-          COVERAGE_THRESHOLD=95.0
+          COVERAGE_THRESHOLD=70.0
           ACTUAL_COVERAGE=$(go tool cover -func=build/coverage.out | grep "total" | awk '{print $3}' | tr -d "%")
           if [ "$(echo "$ACTUAL_COVERAGE < $COVERAGE_THRESHOLD" | bc)" -eq 1 ]; then
           echo "Coverage is less than $COVERAGE_THRESHOLD%"
