@@ -2,10 +2,9 @@ package errors
 
 import (
 	"fmt"
+	"github.com/LetsFocus/goLF/logger"
 	"net/http"
 	"strings"
-
-	"github.com/LetsFocus/goLF/logger"
 )
 
 type Errors struct {

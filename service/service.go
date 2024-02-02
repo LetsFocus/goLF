@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/LetsFocus/goLF/errors"
-	logger "github.com/LetsFocus/goLF/logger"
+	"github.com/LetsFocus/goLF/logger"
 )
 
 const interval = 5
