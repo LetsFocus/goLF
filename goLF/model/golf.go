@@ -12,8 +12,12 @@ type GoLF struct {
 	Config configs.Config
 	Logger *logger.CustomLogger
 }
+type RedisDB struct {
+	Redis        *redis.Client
+	RedisCLuster *redis.ClusterClient
+}
 
 type Database struct {
 	Postgres *sql.DB
-	Redis    *redis.Client
+	RedisDB
 }
