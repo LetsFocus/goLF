@@ -37,7 +37,7 @@ func cleanAddresses(addressesString string) []string {
 	return addressesSlice
 }
 
-func InitializeElasticsearch(golf *model.GoLF, prefix string) {
+func InitializeES(golf *model.GoLF, prefix string) {
 	var (
 		maxConnections, maxIdleConnections, idleConnectionTimeout, maxRetries, retryDuration int
 		monitoring                                                                           bool
@@ -51,7 +51,7 @@ func InitializeElasticsearch(golf *model.GoLF, prefix string) {
 
 	retryDuration, err = strconv.Atoi(golf.Config.Get(prefix + "ES_RETRY_DURATION"))
 	if err != nil {
-		retryDuration = 500
+		retryDuration = 5
 	}
 
 	monitoring, err = strconv.ParseBool(golf.Config.Get(prefix + "ES_MONITORING"))
@@ -104,30 +104,28 @@ func monitoringES(golf *model.GoLF, c esConfig) {
 		retryCounter int
 	)
 
-monitoringLoop:
-	for {
-		select {
-		case <-ticker.C:
-			if _, err = golf.Elasticsearch.Info(); err != nil {
-				if retryCounter < c.maxRetries {
-					for i := 0; i < c.maxRetries; i++ {
-						client, err = establishESConnection(golf.Logger, c)
-						if err == nil {
-							golf.Elasticsearch = client
-							retryCounter = 0
-							break
-						}
-
-						retryCounter++
-						time.Sleep(time.Second * time.Duration(c.retryDuration))
-						golf.Logger.Errorf("ES Retry %d failed: %v", i+1, err)
+	monitoringLoop:
+	for range ticker.C{
+		
+		if _, err = golf.Elasticsearch.Info(); err != nil {
+			if retryCounter < c.maxRetries {
+				for i := 0; i < c.maxRetries; i++ {
+					client, err = establishESConnection(golf.Logger, c)
+					if err == nil {
+						golf.Elasticsearch = client
+						retryCounter = 0
+						break
 					}
-				} else {
-					break monitoringLoop
+
+					retryCounter++
+					time.Sleep(time.Second * time.Duration(c.retryDuration))
+					golf.Logger.Errorf("ES Retry %d failed: %v", i+1, err)
 				}
 			} else {
-				retryCounter = 0
+				break monitoringLoop
 			}
+		} else {
+			retryCounter = 0
 		}
 	}
 

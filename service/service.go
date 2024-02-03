@@ -46,7 +46,7 @@ func NewClient(resourceAddr string, logger *logger.CustomLogger) *Client {
 		logger: logger,
 		Client: &http.Client{Transport: transport, Timeout: interval * time.Second},
 	}
-
+	
 	return httpSvc
 }
 

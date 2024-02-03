@@ -3,6 +3,7 @@ package goLF
 import (
 	"github.com/LetsFocus/goLF/configs"
 	"github.com/LetsFocus/goLF/database"
+	"github.com/LetsFocus/goLF/elasticstack"
 	"github.com/LetsFocus/goLF/goLF/model"
 	"github.com/LetsFocus/goLF/logger"
 )
@@ -14,5 +15,6 @@ func New() model.GoLF {
 	goLF.Config = configs.NewConfig(goLF.Logger)
 
 	database.InitializeDB(&goLF, "")
+	elasticstack.InitializeES(&goLF, "")
 	return goLF
 }
