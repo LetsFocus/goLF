@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"github.com/LetsFocus/goLF/slogs"
 	"net/http"
 	"strconv"
 	"time"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/LetsFocus/goLF/errors"
 	"github.com/LetsFocus/goLF/goLF/model"
-	"github.com/LetsFocus/goLF/logger"
 )
 
 type dbConfig struct {
@@ -133,7 +133,7 @@ monitoringLoop:
 
 						retryCounter++
 						time.Sleep(time.Second * time.Duration(retryTime))
-						golf.Logger.Errorf("DB Retry %d failed: %v", i+1, err)
+						golf.Logger.Logger.Error("DB Retry %d failed")
 					}
 				} else {
 					break monitoringLoop
@@ -145,7 +145,7 @@ monitoringLoop:
 	}
 
 	ticker.Stop()
-	golf.Logger.Errorf("DB Monitoring stopped after reaching maximum retries. Error for DB breakdown is %v", err)
+	golf.Logger.Logger.Error("DB Monitoring stopped after reaching maximum retries.", "Error for DB breakdown", err)
 }
 
 func GenerateConnectionString(c dbConfig) string {
@@ -158,26 +158,26 @@ func GenerateConnectionString(c dbConfig) string {
 	return ""
 }
 
-func establishDBConnection(log *logger.CustomLogger, c dbConfig) (*sql.DB, error) {
+func establishDBConnection(log slogs.Log, c dbConfig) (*sql.DB, error) {
 	connectionString := GenerateConnectionString(c)
 	if connectionString == "" {
-		log.Error("invalid dialect given")
+		log.Logger.Error("invalid dialect given")
 		return nil, errors.Errors{StatusCode: http.StatusInternalServerError, Code: http.StatusText(http.StatusInternalServerError),
 			Reason: "Invalid dialect"}
 	}
 
 	db, err := sql.Open(c.dialect, connectionString)
 	if err != nil {
-		log.Errorf("Failed to initialize the DB, Error:%v", err)
+		log.Logger.Error("Failed to initialize the DB, Error", "error", err)
 		return db, err
 	}
 
 	err = db.Ping()
 	if err != nil {
-		log.Errorf("Failed to ping the DB, Error:%v", err)
+		log.Logger.Error("Failed to ping the DB, Error", "Error", err)
 		return db, err
 	}
 
-	log.Info("database is connected successfully")
+	log.Logger.Info("database is connected successfully")
 	return db, nil
 }
