@@ -90,7 +90,9 @@ func InitializeES(golf *model.GoLF, prefix string) {
 		client, err := establishESConnection(golf.Logger, c)
 		if err == nil {
 			golf.Elasticsearch = client
-			go monitoringES(golf, c)
+			if c.monitoringEnable {
+				go monitoringES(golf, c)
+			}
 		}
 	}
 }
@@ -152,7 +154,7 @@ func establishESConnection(log *logger.CustomLogger, c esConfig) (*elasticsearch
 		log.Errorf("Failed to initialize the Elasticsearch client, Error:%v", err)
 		return nil, err
 	}
-
+	
 	_, err = esClient.Info()
 	if err != nil {
 		log.Errorf("Failed to ping the Elasticsearch cluster, Error:%v", err)

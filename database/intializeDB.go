@@ -101,8 +101,10 @@ func InitializeDB(golf *model.GoLF, prefix string) {
 			db.SetConnMaxIdleTime(time.Minute * time.Duration(c.idleConnectionTimeout))
 
 			golf.Postgres = db
-
-			go monitoringDB(golf, c, retry, retryTime)
+			
+			if c.monitoringEnable {
+				go monitoringDB(golf, c, retry, retryTime)
+			}
 		}
 	}
 }
