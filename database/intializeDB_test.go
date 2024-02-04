@@ -3,6 +3,7 @@ package database
 import (
 	goErr "errors"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -83,6 +84,7 @@ func Test_MonitoringDB(t *testing.T) {
 		dbConfig  dbConfig
 		retry     int
 		retryTime int
+		log       string
 	}{
 		{
 			desc: "successfully monitored the db",
@@ -95,6 +97,7 @@ func Test_MonitoringDB(t *testing.T) {
 				dialect: "postgres", dbName: "testdb", sslMode: "disable"},
 			retry:     3,
 			retryTime: 1,
+			log:       "database is connected successfully",
 		},
 
 		{
@@ -108,6 +111,7 @@ func Test_MonitoringDB(t *testing.T) {
 				dialect: "postgres", dbName: "testdb", sslMode: "disable"},
 			retry:     0,
 			retryTime: 1,
+			log:       "DB Monitoring stopped after reaching maximum retries. Error for DB breakdown is sql: database is closed",
 		},
 
 		{
@@ -121,12 +125,16 @@ func Test_MonitoringDB(t *testing.T) {
 				dialect: "mysql", dbName: "testdb", sslMode: "disable"},
 			retry:     3,
 			retryTime: 1,
+			log:       "invalid dialect given",
 		},
 	}
 
-	for _, tc := range testcases {
+	for i, tc := range testcases {
 		go monitoringDB(tc.input, tc.dbConfig, tc.retry, tc.retryTime)
 
+		if strings.Contains(tc.input.Logger.GetLog(), tc.log) {
+			t.Errorf("Testcase Failed[%v], Required Log: %v, Got: %v", i+1, tc.input.Logger.GetLog(), tc.log)
+		}
 		time.Sleep(time.Second * 3)
 	}
 }
