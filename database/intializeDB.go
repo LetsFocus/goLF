@@ -102,7 +102,10 @@ func InitializeDB(golf *model.GoLF, prefix string) {
 
 			golf.Postgres = db
 
-			go monitoringDB(golf, c, retry, retryTime)
+			c.retry = retry
+			c.retryDuration = retryTime
+
+			go monitoringDB(golf, c, c.retry, c.retryDuration)
 		}
 	}
 }
@@ -117,30 +120,27 @@ func monitoringDB(golf *model.GoLF, c dbConfig, retry, retryTime int) {
 	)
 
 monitoringLoop:
-	for {
-		select {
-		case <-ticker.C:
-			if err = golf.Postgres.Ping(); err != nil {
-				if retryCounter < retry {
-					for i := 0; i < retry; i++ {
-						db, err = establishDBConnection(golf.Logger, c)
-						if err == nil {
-							golf.Postgres = db
-							retryCounter = 0
+	for range ticker.C {
+		if err = golf.Postgres.Ping(); err != nil {
+			if retryCounter < retry {
+				for i := 0; i < retry; i++ {
+					db, err = establishDBConnection(golf.Logger, c)
+					if err == nil {
+						golf.Postgres = db
+						retryCounter = 0
 
-							break
-						}
-
-						retryCounter++
-						time.Sleep(time.Second * time.Duration(retryTime))
-						golf.Logger.Errorf("DB Retry %d failed: %v", i+1, err)
+						break
 					}
-				} else {
-					break monitoringLoop
+
+					retryCounter++
+					time.Sleep(time.Second * time.Duration(retryTime))
+					golf.Logger.Errorf("DB Retry %d failed: %v", i+1, err)
 				}
 			} else {
-				retryCounter = 0
+				break monitoringLoop
 			}
+		} else {
+			retryCounter = 0
 		}
 	}
 
