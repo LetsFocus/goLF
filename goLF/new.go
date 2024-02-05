@@ -14,5 +14,6 @@ func New() model.GoLF {
 	goLF.Config = configs.NewConfig(goLF.Logger)
 
 	database.InitializeDB(&goLF, "")
+	database.InitializeRedis(&goLF, "")
 	return goLF
 }
