@@ -44,7 +44,7 @@ func InitializeES(golf *model.GoLF, prefix string) {
 		err                                                                                  error
 	)
 
-	maxRetries, err = strconv.Atoi(golf.Config.Get(prefix + "ES_MAX_RETRIES"))
+	maxRetries, err = strconv.Atoi(golf.Config.Get(prefix + "ES_RETRY_COUNT"))
 	if err != nil {
 		maxRetries = 5
 	}
@@ -154,7 +154,7 @@ func establishESConnection(log *logger.CustomLogger, c esConfig) (*elasticsearch
 		log.Errorf("Failed to initialize the Elasticsearch client, Error:%v", err)
 		return nil, err
 	}
-	
+
 	_, err = esClient.Info()
 	if err != nil {
 		log.Errorf("Failed to ping the Elasticsearch cluster, Error:%v", err)
