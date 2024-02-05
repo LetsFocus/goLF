@@ -97,7 +97,7 @@ func InitializeDB(golf *model.GoLF, prefix string) {
 		if err == nil {
 			db.SetMaxOpenConns(c.maxOpenConns)
 			db.SetMaxIdleConns(c.maxIdleConns)
-			db.SetConnMaxLifetime(time.Minute * time.Duration(c.maxOpenConns))
+			db.SetConnMaxLifetime(time.Minute * time.Duration(c.connMaxLifeTime))
 			db.SetConnMaxIdleTime(time.Minute * time.Duration(c.idleConnectionTimeout))
 
 			golf.Postgres = db
@@ -120,7 +120,7 @@ func monitoringDB(golf *model.GoLF, c dbConfig, retry, retryTime int) {
 		retryCounter int
 	)
 
-monitoringLoop:
+	monitoringLoop:
 	for range ticker.C {
 		if err = golf.Postgres.Ping(); err != nil {
 			if retryCounter < retry {

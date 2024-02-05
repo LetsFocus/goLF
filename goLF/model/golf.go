@@ -2,9 +2,11 @@ package model
 
 import (
 	"database/sql"
+
 	"github.com/LetsFocus/goLF/configs"
 	"github.com/LetsFocus/goLF/logger"
 	"github.com/LetsFocus/goLF/metrics"
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -22,4 +24,5 @@ type RedisDB struct {
 type Database struct {
 	Postgres *sql.DB
 	RedisDB
+	Elasticsearch *elasticsearch.Client
 }
