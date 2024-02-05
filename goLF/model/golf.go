@@ -2,6 +2,9 @@ package model
 
 import (
 	"database/sql"
+
+	"github.com/elastic/go-elasticsearch/v8"
+
 	"github.com/LetsFocus/goLF/configs"
 	"github.com/LetsFocus/goLF/logger"
 	"github.com/redis/go-redis/v9"

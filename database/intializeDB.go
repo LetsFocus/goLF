@@ -120,7 +120,7 @@ func monitoringDB(golf *model.GoLF, c dbConfig, retry, retryTime int) {
 		retryCounter int
 	)
 
-monitoringLoop:
+	monitoringLoop:
 	for range ticker.C {
 		if err = golf.Postgres.Ping(); err != nil {
 			if retryCounter < retry {
