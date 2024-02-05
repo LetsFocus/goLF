@@ -13,8 +13,10 @@ func New() model.GoLF {
 
 	goLF.Logger = logger.NewCustomLogger()
 	goLF.Config = configs.NewConfig(goLF.Logger)
-	
+
 	database.InitializeDB(&goLF, "")
 	database.InitializeRedis(&goLF, "")
+	elasticstack.InitializeES(&goLF, "")
+	
 	return goLF
 }

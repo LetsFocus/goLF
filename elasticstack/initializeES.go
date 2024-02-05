@@ -106,9 +106,9 @@ func monitoringES(golf *model.GoLF, c esConfig) {
 		retryCounter int
 	)
 
-	monitoringLoop:
-	for range ticker.C{
-		
+monitoringLoop:
+	for range ticker.C {
+
 		if _, err = golf.Elasticsearch.Info(); err != nil {
 			if retryCounter < c.maxRetries {
 				for i := 0; i < c.maxRetries; i++ {
