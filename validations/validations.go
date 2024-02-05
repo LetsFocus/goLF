@@ -60,17 +60,13 @@ func RemoveSliceDuplicates(slice []interface{}) []interface{} {
 
 // RemoveSliceElement removes a particular element in a slice based on index
 func RemoveSliceElement(slice []interface{}, index int) []interface{} {
-	result := []interface{}{}
 	if index >= 0 && index < len(slice) {
-		if index == len(slice)-1{
-			result = slice[:index]
-		}else{
-			result = append(slice[:index], slice[index+1:]...)
+		if index == len(slice)-1 {
+			return slice[:index]
 		}
-	}else{
-		result = slice
+		return append(slice[:index], slice[index+1:]...)
 	}
-	return result
+	return slice
 }
 
 // StrToInt converts string to integer return in a val, err format
