@@ -27,15 +27,15 @@ type redisConfig struct {
 func InitializeRedis(golf *model.GoLF, prefix string) {
 	host := golf.Config.Get(prefix + "REDIS_HOST")
 	port := golf.Config.Get(prefix + "REDIS_PORT")
-	pwd := golf.Config.Get(prefix + "REDIS_PASSWORD")
-	d := golf.Config.Get(prefix + "REDIS_DB_NUMBER")
+	password := golf.Config.Get(prefix + "REDIS_PASSWORD")
+	dbStr := golf.Config.Get(prefix + "REDIS_DB_NUMBER")
 
 	retry, err := strconv.Atoi(golf.Config.Get(prefix + "REDIS_MAX_RETRIES"))
 	if err != nil {
 		retry = 5
 	}
 
-	retryTime, err := time.ParseDuration(golf.Config.Get(prefix + "REDIS_RETRY_TIME"))
+	retryTime, err := time.ParseDuration(golf.Config.Get(prefix + "REDIS_RETRY_DURATION"))
 	if err != nil {
 		retryTime = time.Duration(5)
 	}
@@ -64,8 +64,8 @@ func InitializeRedis(golf *model.GoLF, prefix string) {
 	if err != nil {
 		conMaxLife = time.Duration(10)
 	}
-	db, err := strconv.Atoi(d)
-	if err != nil && d != "" {
+	db, err := strconv.Atoi(dbStr)
+	if err != nil && dbStr != "" {
 		golf.Logger.Errorf("invalid db number: %v", err)
 		return
 	}
@@ -73,7 +73,7 @@ func InitializeRedis(golf *model.GoLF, prefix string) {
 	if host != "" && port != "" {
 		redisCon := redisConfig{
 			addr:           host + ":" + port,
-			password:       pwd,
+			password:       password,
 			dB:             db,
 			retries:        retry,
 			retryTime:      retryTime,

@@ -36,7 +36,7 @@ func Test_createRedisConnectionFail(t *testing.T) {
 	testcases := []struct {
 		desc        string
 		redisConfig redisConfig
-		err         error
+		errString   string
 	}{
 
 		{
@@ -53,12 +53,12 @@ func Test_createRedisConnectionFail(t *testing.T) {
 				connMaxLife:    time.Duration(10),
 				conMaxIdleTime: time.Duration(30),
 			},
-			//err: errors.New("dial tcp 127.0.0.1:6399: connectex: No connection could be made because the target machine actively refused it."),
+			errString: "dial tcp 127.0.0.1:6399",
 		},
 	}
 	for _, tc := range testcases {
 		_, err := createRedisConnection(&tc.redisConfig, log)
-		assert.Contains(t, err.Error(), "dial tcp 127.0.0.1:6399", "error")
+		assert.Contains(t, err.Error(), tc.errString, "Testcase failed")
 	}
 }
 func Test_createRedisConnectionPass(t *testing.T) {
