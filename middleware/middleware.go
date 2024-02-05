@@ -26,9 +26,11 @@ func CORS(handler http.Handler) http.Handler {
 }
 
 func AddCorrelationID(next http.Handler) http.Handler {
+	type correlationID string
+	var cl correlationID = "X-CORRELATIONID"
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Context().Value("X-CORRELATIONID") == "" {
-			ctx := context.WithValue(r.Context(), "X-CORRELATIONID", uuid.New())
+			ctx := context.WithValue(r.Context(), cl, uuid.New())
 			r = r.WithContext(ctx)
 		}
 
