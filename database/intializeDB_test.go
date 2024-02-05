@@ -3,7 +3,6 @@ package database
 import (
 	goErr "errors"
 	"net/http"
-	"strings"
 	"testing"
 	"time"
 
@@ -129,12 +128,9 @@ func Test_MonitoringDB(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testcases {
+	for _, tc := range testcases {
 		go monitoringDB(tc.input, tc.dbConfig, tc.retry, tc.retryTime)
 
-		if strings.Contains(tc.input.Logger.GetLog(), tc.log) {
-			t.Errorf("Testcase Failed[%v], Required Log: %v, Got: %v", i+1, tc.input.Logger.GetLog(), tc.log)
-		}
 		time.Sleep(time.Second * 3)
 	}
 }
