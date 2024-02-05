@@ -1,17 +1,18 @@
 package database
 
 import (
-	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/LetsFocus/goLF/configs"
 	"github.com/LetsFocus/goLF/goLF/model"
 	"github.com/LetsFocus/goLF/logger"
-	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func Test_InitializeRedis(t *testing.T) {
-	t.Setenv("REDIS_LOCALHOST", "127.0.0.1")
+	t.Setenv("REDIS_HOST", "127.0.0.1")
 	t.Setenv("REDIS_PORT", "6379")
 	testcases := []struct {
 		input *model.GoLF
@@ -52,12 +53,12 @@ func Test_createRedisConnectionFail(t *testing.T) {
 				connMaxLife:    time.Duration(10),
 				conMaxIdleTime: time.Duration(30),
 			},
-			err: errors.New("dial tcp 127.0.0.1:6399: connectex: No connection could be made because the target machine actively refused it."),
+			//err: errors.New("dial tcp 127.0.0.1:6399: connectex: No connection could be made because the target machine actively refused it."),
 		},
 	}
-	for i, tc := range testcases {
+	for _, tc := range testcases {
 		_, err := createRedisConnection(&tc.redisConfig, log)
-		assert.Equalf(t, tc.err.Error(), err.Error(), "Test[%d] FAILED, Could not connect to SQL, got error: %v\n", i, err)
+		assert.Contains(t, err.Error(), "dial tcp 127.0.0.1:6399", "error")
 	}
 }
 func Test_createRedisConnectionPass(t *testing.T) {
