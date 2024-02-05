@@ -20,7 +20,7 @@ func NewConfig(log *logger.CustomLogger) Config {
 		log.Error("No .env file found")
 	}
 
-	log.Info("Logs are initialized")
+	log.Infof("Logs are initialized path: %v", envPath)
 	return Config{Log: log}
 }
 

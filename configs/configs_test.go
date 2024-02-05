@@ -1,36 +1,80 @@
 package configs
 
 import (
-	"os"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
 	"github.com/LetsFocus/goLF/logger"
+	"strings"
+	"testing"
 )
 
-func TestNewConfig_LoadsConfigWithEnv(t *testing.T) {
-	os.Setenv("APP_ENV", "test")
-	os.Setenv("TEST_KEY", "test_value")
-	
-	logger := logger.NewCustomLogger()
-	config := NewConfig(logger)
+func TestNewConfig(t *testing.T) {
+	tests := []struct {
+		name       string
+		env        map[string]string
+		expected   string
+		expectLogs string
+	}{
+		{
+			name:     "Load .env file successfully",
+			env:      map[string]string{"APP_ENV": "test"},
+			expected: "./configs/.test.env",
+		},
+		{
+			name:     "No APP_ENV set, load default .env",
+			env:      map[string]string{},
+			expected: "./configs/.env",
+		},
+	}
 
-	assert.NotNil(t, config.Log)
-	assert.Equal(t, "test_value", config.Get("TEST_KEY"))
+	for i, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			log := logger.NewCustomLogger()
 
-	os.Unsetenv("APP_ENV")
-	os.Unsetenv("TEST_KEY")
+			for key, value := range test.env {
+				t.Setenv(key, value)
+			}
+
+			config := NewConfig(log)
+
+			if !strings.Contains(config.Log.GetLog(), test.expected) {
+				t.Errorf("Test Case Failed[%v] Got: %v, Required: %v", i+1, config.Log.GetLog(), test.expected)
+			}
+		})
+	}
 }
 
-func TestNewConfig_LoadsConfigWithoutEnv(t *testing.T) {
-	os.Setenv("TEST_KEY", "test_value")
-	
-	logger := logger.NewCustomLogger()
-	config := NewConfig(logger)
-	
-	assert.NotNil(t, config.Log)
-	assert.Equal(t, "test_value", config.Get("TEST_KEY"))
+func TestConfig_Get(t *testing.T) {
+	tests := []struct {
+		name     string
+		env      map[string]string
+		key      string
+		expected string
+	}{
+		{
+			name:     "Get value from environment variable",
+			env:      map[string]string{"MY_VARIABLE": "test_value"},
+			key:      "MY_VARIABLE",
+			expected: "test_value",
+		},
+		{
+			name:     "Variable not found, return empty string",
+			env:      map[string]string{},
+			key:      "NOT_FOUND_VARIABLE",
+			expected: "",
+		},
+	}
 
-	os.Unsetenv("TEST_KEY")
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			for key, value := range test.env {
+				t.Setenv(key, value)
+			}
+
+			config := Config{}
+			result := config.Get(test.key)
+
+			if result != test.expected {
+				t.Errorf("Expected %s, got %s", test.expected, result)
+			}
+		})
+	}
 }
