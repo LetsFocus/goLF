@@ -22,7 +22,6 @@ type Client struct {
 	*http.Client
 	url           string
 	logger        *logger.CustomLogger
-	headerKeys    []string
 	customHeaders map[string]string
 }
 
