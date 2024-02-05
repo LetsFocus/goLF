@@ -104,8 +104,9 @@ func InitializeDB(golf *model.GoLF, prefix string) {
 
 			c.retry = retry
 			c.retryDuration = retryTime
-
-			go monitoringDB(golf, c, c.retry, c.retryDuration)
+			if c.monitoringEnable {
+				go monitoringDB(golf, c, c.retry, c.retryDuration)
+			}
 		}
 	}
 }
