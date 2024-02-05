@@ -37,22 +37,7 @@ func Test_createRedisConnectionFail(t *testing.T) {
 		redisConfig redisConfig
 		err         error
 	}{
-		/*{
-			desc: "Successfully connected",
-			redisConfig: redisConfig{
-				addr:           "127.0.0.1:6379",
-				password:       "",
-				dB:             0,
-				retries:        5,
-				retryTime:      time.Duration(5),
-				poolSize:       10,
-				minIdleConns:   4,
-				maxIdleConns:   8,
-				connMaxLife:    time.Duration(10),
-				conMaxIdleTime: time.Duration(30),
-			},
-			err: nil,
-		},*/
+
 		{
 			desc: "Failed to connect",
 			redisConfig: redisConfig{
