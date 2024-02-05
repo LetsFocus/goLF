@@ -102,7 +102,7 @@ func (c *Client) createRequest(ctx context.Context, method, target string, param
 	if (method == http.MethodGet || method == http.MethodPost || method == http.MethodPut || method == http.MethodPatch) && params != nil {
 		setQueryParams(req, params)
 	}
-
+	
 	return req, nil
 }
 

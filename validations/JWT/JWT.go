@@ -15,33 +15,27 @@ type Keys struct {
 
 func CreateJWTToken(algorithm, subject string, header, data map[string]interface{}, keys Keys) (string, error) {
 	switch algorithm {
-	case "RSA":
-		token := jwt.New(jwt.SigningMethodRS512)
+		case "RSA":
+			token := jwt.New(jwt.SigningMethodRS512)
+			claims := token.Claims.(jwt.MapClaims)
 
-		claims := token.Claims.(jwt.MapClaims)
-
-		if header != nil {
 			for key, value := range header {
 				claims[key] = value
 			}
-		}
 
-		if data != nil {
 			for key, value := range data {
 				claims[key] = value
 			}
-		}
-
-		claims["sub"] = subject
-		claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
-
-		tokenString, err := token.SignedString(keys.PrivateKey)
-		if err != nil {
-			return "", err
-		}
-
-		return tokenString, nil
-
+			
+			claims["sub"] = subject
+			claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+			
+			tokenString, err := token.SignedString(keys.PrivateKey)
+			if err != nil {
+				return "", err
+			}
+			
+			return tokenString, nil
 	}
 
 	return "", nil
@@ -103,6 +97,6 @@ func GetRSAPublicKey(publicKeyString string) (*rsa.PublicKey, error) {
 		return nil, &errors.Errors{StatusCode: http.StatusBadRequest,
 			Code: http.StatusText(http.StatusBadRequest), Reason: "invalid PublicKey " + err.Error()}
 	}
-
+	
 	return key, nil
 }
