@@ -53,7 +53,7 @@ func InitializeDB(golf *model.GoLF, prefix string) {
 		connectionMaxLifeTime = 15
 	}
 
-	idleConnectionTimeout, err = strconv.Atoi(golf.Config.Get(prefix + "DB_IDLE_CONNECTION_TIMEOUT"))
+	idleConnectionTimeout, err = strconv.Atoi(golf.Config.Get(prefix + "DB_IDLE_CONNECTIONS_TIMEOUT"))
 	if err != nil {
 		idleConnectionTimeout = 10
 	}

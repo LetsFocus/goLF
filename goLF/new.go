@@ -6,6 +6,7 @@ import (
 	"github.com/LetsFocus/goLF/elasticstack"
 	"github.com/LetsFocus/goLF/goLF/model"
 	"github.com/LetsFocus/goLF/logger"
+	"github.com/LetsFocus/goLF/metrics"
 )
 
 func New() model.GoLF {
@@ -17,6 +18,7 @@ func New() model.GoLF {
 	database.InitializeDB(&goLF, "")
 	database.InitializeRedis(&goLF, "")
 	elasticstack.InitializeES(&goLF, "")
-	
+
+	goLF.Metrics = metrics.NewMetricsServer()
 	return goLF
 }
