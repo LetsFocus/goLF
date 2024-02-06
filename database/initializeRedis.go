@@ -30,7 +30,7 @@ func InitializeRedis(golf *model.GoLF, prefix string) {
 	password := golf.Config.Get(prefix + "REDIS_PASSWORD")
 	dbStr := golf.Config.Get(prefix + "REDIS_DB_NUMBER")
 
-	retry, err := strconv.Atoi(golf.Config.Get(prefix + "REDIS_MAX_RETRIES"))
+	retry, err := strconv.Atoi(golf.Config.Get(prefix + "REDIS_RETRY_COUNT"))
 	if err != nil {
 		retry = 5
 	}
@@ -45,25 +45,26 @@ func InitializeRedis(golf *model.GoLF, prefix string) {
 		poolSize = 10
 	}
 
-	minIdleConns, err := strconv.Atoi(golf.Config.Get(prefix + "REDIS_MIN_IDLE_CONNS"))
+	minIdleConns, err := strconv.Atoi(golf.Config.Get(prefix + "REDIS_MIN_IDLE_CONNECTIONS"))
 	if err != nil {
 		minIdleConns = 4
 	}
 
-	maxIdleConns, err := strconv.Atoi(golf.Config.Get(prefix + "REDIS_MAX_IDLE_CONNS"))
+	maxIdleConns, err := strconv.Atoi(golf.Config.Get(prefix + "REDIS_MAX_IDLE_CONNECTIONS"))
 	if err != nil {
 		maxIdleConns = 8
 	}
 
-	conMaxIdleTime, err := time.ParseDuration(golf.Config.Get(prefix + "REDIS_CONN_MAX_IDLE_TIME"))
+	conMaxIdleTime, err := time.ParseDuration(golf.Config.Get(prefix + "REDIS_IDLE_CONNECTIONS_TIMEOUT"))
 	if err != nil {
 		conMaxIdleTime = time.Duration(30)
 	}
 
-	conMaxLife, err := time.ParseDuration(golf.Config.Get(prefix + "REDIS_CONN_MAX_LIFE"))
+	conMaxLife, err := time.ParseDuration(golf.Config.Get(prefix + "REDIS_CONNECTIONS_MAX_LIFETIME"))
 	if err != nil {
 		conMaxLife = time.Duration(10)
 	}
+
 	db, err := strconv.Atoi(dbStr)
 	if err != nil && dbStr != "" {
 		golf.Logger.Errorf("invalid db number: %v", err)
