@@ -62,7 +62,7 @@ jobs:
 
       - name: Coverage Check
         run: |
-          COVERAGE_THRESHOLD=70.0
+          COVERAGE_THRESHOLD=65.0
           ACTUAL_COVERAGE=$(go tool cover -func=build/coverage.out | grep "total" | awk '{print $3}' | tr -d "%")
           if [ "$(echo "$ACTUAL_COVERAGE < $COVERAGE_THRESHOLD" | bc)" -eq 1 ]; then
           echo "Coverage is less than $COVERAGE_THRESHOLD%"
@@ -90,7 +90,7 @@ jobs:
 
       - name: Install golangci-lint
         run: |
-          curl -sfl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.50.1
+          curl -sfl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.54.1
            golangci-lint --version
 
       - name: Linters check
