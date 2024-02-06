@@ -88,6 +88,6 @@ func Test_createRedisConnectionPass(t *testing.T) {
 	}
 	for i, tc := range testcases {
 		_, err := createRedisConnection(&tc.redisConfig, log)
-		assert.Equalf(t, tc.err, err, "Test[%d] FAILED, Could not connect to SQL, got error: %v\n", i, err)
+		assert.Equalf(t, tc.err, err, "Test[%d] FAILED, Could not connect to Redis, got error: %v\n", i, err)
 	}
 }
