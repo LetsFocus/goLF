@@ -61,5 +61,5 @@ func EntityNotFound(entity, id string) error {
 }
 
 func UnMarshalError() error {
-	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: fmt.Sprintf("incorrect data format")}
+	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: "incorrect data format"}
 }

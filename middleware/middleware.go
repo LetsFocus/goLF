@@ -15,7 +15,7 @@ func CORS(handler http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
+			
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
@@ -26,9 +26,11 @@ func CORS(handler http.Handler) http.Handler {
 }
 
 func AddCorrelationID(next http.Handler) http.Handler {
+	type correlationID string
+	var cl correlationID = "X-CORRELATIONID"
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Context().Value("X-CORRELATIONID") == "" {
-			ctx := context.WithValue(r.Context(), "X-CORRELATION", uuid.New())
+			ctx := context.WithValue(r.Context(), cl, uuid.New())
 			r = r.WithContext(ctx)
 		}
 

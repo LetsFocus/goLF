@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,18 +19,17 @@ func IsValidEmail(email string) bool {
 
 // IsValidPhoneNumber checks if a string is a valid phone number.
 func IsValidPhoneNumber(phoneNumber string) bool {
-	pattern := `^\+?[1-9]\d{1,14}$`
+	pattern := `^\+?[1-9]\d{6,13}$`
 	return regexp.MustCompile(pattern).MatchString(phoneNumber)
 }
 
 // IsValidUUID checks if a string is a valid UUID (version 4).
 func IsValidUUID(u string) bool {
-	_, err := uuid.Parse(u)
-	if err != nil {
+	if !strings.Contains(u, "-") {
 		return false
 	}
-
-	return true
+	_, err := uuid.Parse(u)
+	return err == nil
 }
 
 // IsValidTime checks if a string is a valid time in HH:MM:SS format.
@@ -45,12 +45,12 @@ func IsValidDate(dateStr string) bool {
 }
 
 // RemoveSliceDuplicates revomes the duplicate elements in a slice.
-func RemoveSliceDuplicates[T comparable](slice []T) []T {
-	encountered := map[T]bool{}
-	result := []T{}
+func RemoveSliceDuplicates(slice []interface{}) []interface{} {
+	encountered := map[interface{}]bool{}
+	result := []interface{}{}
 
 	for v := range slice {
-		if encountered[slice[v]] == false {
+		if !encountered[slice[v]] {
 			encountered[slice[v]] = true
 			result = append(result, slice[v])
 		}
@@ -59,15 +59,14 @@ func RemoveSliceDuplicates[T comparable](slice []T) []T {
 }
 
 // RemoveSliceElement removes a particular element in a slice based on index
-func RemoveSliceElement[T comparable](slice []T, index int) []T {
-	result := []T{}
-	if index < len(slice)-1 {
-		result = append(slice[:index], slice[index+1:]...)
+func RemoveSliceElement(slice []interface{}, index int) []interface{} {
+	if index >= 0 && index < len(slice) {
+		if index == len(slice)-1 {
+			return slice[:index]
+		}
+		return append(slice[:index], slice[index+1:]...)
 	}
-	if index == len(slice)-1 {
-		result = append(slice[:index])
-	}
-	return result
+	return slice
 }
 
 // StrToInt converts string to integer return in a val, err format
@@ -83,7 +82,6 @@ func StrToInt(s string) (int, error) {
 func IntToStr(value int) string {
 	val := strconv.Itoa(value)
 	return val
-
 }
 
 // RendInt return a random integer from the range[0,n]

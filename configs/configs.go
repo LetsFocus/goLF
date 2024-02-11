@@ -4,57 +4,71 @@ import (
 	"github.com/LetsFocus/goLF/slogs"
 	"github.com/joho/godotenv"
 	"os"
-	"time"
 )
 
-func NewConfig(log slogs.Log) Config {
-	loadConfigs(log)
-
-	if configsRefresh := os.Getenv("CONFIG_REFRESH"); configsRefresh == "true" {
-		go watchAndReloadConfigs(log)
-
-	}
+func NewConfig(log slogs.Log, path string) Config {
+	c := Config{log: log}
+	c.LoadConfigs(log, path)
 
 	log.Logger.Info("configs are loaded")
 
-	return Config{Log: log}
+	return c
 }
 
 type Config struct {
-	Log slogs.Log
+	log  slogs.Log
+	path []string
 }
 
 type Configs interface {
 	Get(key string) string
+	GetPath() string
 }
 
 func (c Config) Get(key string) string {
 	return os.Getenv(key)
 }
 
-func watchAndReloadConfigs(log slogs.Log) {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			loadConfigs(log)
-			log.Logger.Info("counter")
-		}
-	}
+func (c Config) GetPath() []string {
+	return c.path
 }
 
-func loadConfigs(log slogs.Log) {
+func (c *Config) LoadConfigs(log slogs.Log, path string) {
 	env := os.Getenv("APP_ENV")
-	envPath := ""
-	if env != "" {
-		envPath = "./configs/." + env + ".env"
-	} else {
-		envPath = "./configs/.env"
+
+	envPath := make([]string, 0)
+
+	location := getLocation()
+
+	if path != "" {
+		envPath = append(envPath, path+"/.env")
 	}
 
-	if err := godotenv.Load(envPath); err != nil {
+	if env != "" {
+		envPath = append(envPath, location+".env")
+		envPath = append(envPath, location+env+".env")
+	} else {
+		envPath = append(envPath, location+".env")
+	}
+
+	if err := godotenv.Load(envPath...); err != nil {
 		log.Logger.Error("No .env file found")
 	}
+
+	c.path = envPath
+}
+
+func getLocation() string {
+	defaultLocations := make([]string, 0)
+	defaultLocations = append(defaultLocations, "./configs/", "../configs/", "../../configs/")
+
+	for _, path := range defaultLocations {
+		if _, err := os.Stat(path); err != nil {
+			continue
+		}
+
+		return path
+	}
+
+	return ""
 }

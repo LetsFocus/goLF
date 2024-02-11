@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 )
-
+//nolint:unused //type `service` is unused (unused) type service interface {
 type service interface {
 	Get(ctx context.Context, target string, params map[string]interface{}, headers map[string]string) (HTTPResponse, error)
 	Post(ctx context.Context, target string, body []byte, headers map[string]string) (HTTPResponse, error)

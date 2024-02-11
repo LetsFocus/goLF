@@ -22,7 +22,6 @@ type Client struct {
 	*http.Client
 	url           string
 	logger        *logger.CustomLogger
-	headerKeys    []string
 	customHeaders map[string]string
 }
 
@@ -46,7 +45,7 @@ func NewClient(resourceAddr string, logger *logger.CustomLogger) *Client {
 		logger: logger,
 		Client: &http.Client{Transport: transport, Timeout: interval * time.Second},
 	}
-
+	
 	return httpSvc
 }
 
@@ -102,7 +101,7 @@ func (c *Client) createRequest(ctx context.Context, method, target string, param
 	if (method == http.MethodGet || method == http.MethodPost || method == http.MethodPut || method == http.MethodPatch) && params != nil {
 		setQueryParams(req, params)
 	}
-
+	
 	return req, nil
 }
 
