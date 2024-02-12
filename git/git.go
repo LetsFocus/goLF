@@ -31,8 +31,8 @@ func CommitChanges(message string) {
 	runCommand(cmd)
 }
 
-func PushChanges(remote, branch string) {
-	cmd := exec.Command("git", "push", remote, branch)
+func PushChanges(branch string) {
+	cmd := exec.Command("git", "push", "origin", branch)
 	runCommand(cmd)
 }
 
@@ -164,6 +164,21 @@ func GetStatus() {
 func GetRemoteURL() {
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
 	runCommand(cmd)
+}
+
+func GitCheckout(branchName string) {
+    cmd := exec.Command("git", "checkout", branchName)
+    runCommand(cmd)
+}
+
+func GitPull(branch string) {
+	cmd := exec.Command("git", "pull", "origin" , branch)
+	RunCommand(cmd)
+}
+
+func GitCheckoutNewBranch(branch string) {
+	cmd := exec.Command("git", "checkout", "-b", branch)
+	RunCommand(cmd)
 }
 
 func runCommand(cmd *exec.Cmd) {
