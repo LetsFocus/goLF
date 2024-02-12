@@ -173,12 +173,12 @@ func GitCheckout(branchName string) {
 
 func GitPull(branch string) {
 	cmd := exec.Command("git", "pull", "origin" , branch)
-	RunCommand(cmd)
+	runCommand(cmd)
 }
 
 func GitCheckoutNewBranch(branch string) {
 	cmd := exec.Command("git", "checkout", "-b", branch)
-	RunCommand(cmd)
+	runCommand(cmd)
 }
 
 func runCommand(cmd *exec.Cmd) {
