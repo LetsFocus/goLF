@@ -30,8 +30,8 @@ func Test_establishDBConnection(t *testing.T) {
 
 		{
 			desc: "successfully established mysql db connection",
-			dbConfig: dbConfig{host: "localhost", port: "5432", user: "mysql", password: "password",
-				dialect: "postgres", dbName: "testdb", sslMode: "disable"},
+			dbConfig: dbConfig{host: "localhost", port: "3306", user: "mysql", password: "password",
+				dialect: "mysql", dbName: "testdb", sslMode: "disable"},
 		},
 
 		{
