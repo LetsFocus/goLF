@@ -153,7 +153,7 @@ monitoringLoop:
 func GenerateConnectionString(c dbConfig) string {
 	switch c.dialect {
 	case "mysql":
-		return fmt.Sprintf("%s:%s@tcp(%s:%v)/%s?sslmode=%s", c.user, c.password, c.host, c.port, c.dbName, c.sslMode)
+		return fmt.Sprintf("%s:%s@tcp(%s:%v)/%s", c.user, c.password, c.host, c.port, c.dbName)
 	case "postgres":
 		return fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", c.user, c.password, c.host, c.port, c.dbName, c.sslMode)
 	}
