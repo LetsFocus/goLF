@@ -8,6 +8,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+        _ "github.com/go-sql-driver/mysql"
 
 	"github.com/LetsFocus/goLF/errors"
 	"github.com/LetsFocus/goLF/goLF/model"
@@ -152,6 +153,7 @@ func monitoringDB(golf *model.GoLF, c dbConfig, retry, retryTime int) {
 func GenerateConnectionString(c dbConfig) string {
 	switch c.dialect {
 	case "mysql":
+                return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?sslmode=%s", c.user, c.password, c.host, c.port, c.dbName, c.sslMode)
 	case "postgres":
 		return fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", c.user, c.password, c.host, c.port, c.dbName, c.sslMode)
 	}
