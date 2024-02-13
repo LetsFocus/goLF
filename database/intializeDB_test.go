@@ -31,6 +31,11 @@ func Test_establishDBConnection(t *testing.T) {
 		{
 			desc:     "connectionString empty",
 			dbConfig: dbConfig{dialect: "mysql"},
+		},
+
+		{
+			desc:     "connectionString empty",
+			dbConfig: dbConfig{dialect: "redis"},
 			err: errors.Errors{StatusCode: http.StatusInternalServerError, Code: http.StatusText(http.StatusInternalServerError),
 				Reason: "Invalid dialect"},
 		},
@@ -44,9 +49,11 @@ func Test_establishDBConnection(t *testing.T) {
 	}
 
 	for i, tc := range testcases {
-		_, err := establishDBConnection(log, tc.dbConfig)
+		t.Run(tc.desc, func(t *testing.T) {
+			_, err := establishDBConnection(log, tc.dbConfig)
 
-		assert.Equalf(t, tc.err, err, "Test[%d] FAILED, Could not connect to SQL, got error: %v\n", i, err)
+			assert.Equalf(t, tc.err, err, "Test[%d] FAILED, Could not connect to SQL, got error: %v\n", i, err)
+		})
 	}
 }
 
