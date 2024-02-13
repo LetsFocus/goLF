@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/elastic/go-elasticsearch/v8 v8.12.0
 	github.com/fatih/color v1.15.0
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
