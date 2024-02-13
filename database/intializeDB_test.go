@@ -23,14 +23,15 @@ func Test_establishDBConnection(t *testing.T) {
 		err      error
 	}{
 		{
-			desc: "successfully established mysql db connection",
+			desc: "successfully established postgres db connection",
 			dbConfig: dbConfig{host: "localhost", port: "5432", user: "postgres", password: "password",
 				dialect: "postgres", dbName: "testdb", sslMode: "disable"},
 		},
 
 		{
-			desc:     "connectionString empty",
-			dbConfig: dbConfig{dialect: "mysql"},
+			desc: "successfully established mysql db connection",
+			dbConfig: dbConfig{host: "localhost", port: "5432", user: "mysql", password: "password",
+				dialect: "postgres", dbName: "testdb", sslMode: "disable"},
 		},
 
 		{

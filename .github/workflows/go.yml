@@ -13,6 +13,16 @@ on:
 jobs:
   Unit-Tests:
     services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: password
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
       postgres:
         image: postgres:latest
         env:
