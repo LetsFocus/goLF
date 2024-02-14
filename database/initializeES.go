@@ -1,4 +1,4 @@
-package elasticstack
+package database
 
 import (
 	"net/http"
