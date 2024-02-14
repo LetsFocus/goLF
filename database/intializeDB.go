@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 
 	"github.com/LetsFocus/goLF/errors"
@@ -120,7 +121,7 @@ func monitoringDB(golf *model.GoLF, c dbConfig, retry, retryTime int) {
 		retryCounter int
 	)
 
-	monitoringLoop:
+monitoringLoop:
 	for range ticker.C {
 		if err = golf.Postgres.Ping(); err != nil {
 			if retryCounter < retry {
@@ -152,6 +153,7 @@ func monitoringDB(golf *model.GoLF, c dbConfig, retry, retryTime int) {
 func GenerateConnectionString(c dbConfig) string {
 	switch c.dialect {
 	case "mysql":
+		return fmt.Sprintf("%s:%s@tcp(%s:%v)/%s", c.user, c.password, c.host, c.port, c.dbName)
 	case "postgres":
 		return fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", c.user, c.password, c.host, c.port, c.dbName, c.sslMode)
 	}
