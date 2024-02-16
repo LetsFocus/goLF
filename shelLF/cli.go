@@ -35,6 +35,7 @@ func (cli *CLI) Run() {
 	if ok {
 		if err := cmd.Flags.Parse(os.Args[2:]); err != nil {
             log.Fatalf("Error parsing flags for command '%s': %v", cmd.Name, err)
+			os.Exit(1)
         }
 		flagMap := make(map[string]interface{})
 		for flagName, flagValue := range cmd.FlagMap {
