@@ -1,15 +1,24 @@
-package shelLF
+package cmd
 
 import (
 	"flag"
-	"log"
 	"os"
 	"time"
+
+	"github.com/LetsFocus/goLF/logger"
 )
 
-func NewCLI(toolName string) *CLI {
+func NewCLI() *CLI {
 	commandMap := make(map[string]*Command)
-	return &CLI{toolName: toolName, commands: commandMap}
+	return &CLI{toolName: "myTool", commands: commandMap}
+}
+
+func (cli *CLI) SetCLIName(toolName string) {
+	cli.toolName = toolName
+}
+
+func (cli *CLI) SetCLIVersion(toolVersion string) {
+	cli.version = toolVersion
 }
 
 func (cli *CLI) AddCommand(cmd Command) {
@@ -17,16 +26,26 @@ func (cli *CLI) AddCommand(cmd Command) {
 }
 
 func (cli *CLI) printUsage() {
-	log.Printf("Usage: %s <command> [options]", cli.toolName)
-	log.Println("Available commands:")
+	logger := logger.NewCustomLogger()
+	logger.Infof("Usage: %s <command> [options]", cli.toolName)
+	logger.Infof("Available commands:")
 	for _, cmd := range cli.commands {
-		log.Printf("  %s\t%s\n", cmd.Name, cmd.Description)
+		logger.Infof("What is my command: %s\n", cmd.Name)
+		logger.Infof("What I do: %s\n", cmd.Description)
+		logger.Infof("What I accept:")
+		cmd.Flags.PrintDefaults()
 	}
 }
 
 func (cli *CLI) Run() {
-	if len(os.Args) <= 1 || os.Args[1] == "help" {
+	logger := logger.NewCustomLogger()
+	if len(os.Args) <= 1 || os.Args[1] == "-h" {
 		cli.printUsage()
+		os.Exit(1)
+	}
+
+	if os.Args[1] == "-v" || os.Args[1] == "--version" {
+		logger.Infof("version: %s", cli.version)
 		os.Exit(1)
 	}
 
@@ -34,9 +53,10 @@ func (cli *CLI) Run() {
 	cmd, ok := cli.commands[cmdName]
 	if ok {
 		if err := cmd.Flags.Parse(os.Args[2:]); err != nil {
-            log.Fatalf("Error parsing flags for command '%s': %v", cmd.Name, err)
+			logger.Errorf("Error parsing flags for command '%s': %v", cmd.Name, err)
 			os.Exit(1)
-        }
+		}
+
 		flagMap := make(map[string]interface{})
 		for flagName, flagValue := range cmd.FlagMap {
 			switch value := flagValue.(type) {
@@ -60,20 +80,21 @@ func (cli *CLI) Run() {
 		}
 		err := cmd.Task(flagMap)
 		if err != nil {
-			log.Fatalf("Error executing command '%s': %v\n", cmd.Name, err)
+			logger.Errorf("Error executing command '%s': %v\n", cmd.Name, err)
 		}
 		return
 	} else {
-		log.Printf("Error: Unknown command '%s'\n", cmdName)
+		logger.Errorf("Error: Unknown command '%s'\n", cmdName)
 		cli.printUsage()
 		os.Exit(1)
 	}
 }
 
 func (cli *CLI) AddFlags(command string, cmdFlags []Flags) {
+	logger := logger.NewCustomLogger()
 	_, ok := cli.commands[command]
 	if !ok {
-		log.Printf("Error: Invalid command '%s'\n", command)
+		logger.Errorf("Error: Invalid command '%s'\n", command)
 		cli.printUsage()
 		os.Exit(1)
 	}

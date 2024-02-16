@@ -1,4 +1,4 @@
-package shelLF
+package cmd
 
 import "flag"
 
@@ -30,5 +30,6 @@ type Command struct {
 
 type CLI struct {
 	toolName string
+	version  string
 	commands map[string]*Command
 }

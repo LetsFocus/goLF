@@ -1,6 +1,7 @@
 package goLF
 
 import (
+	"github.com/LetsFocus/goLF/cmd"
 	"github.com/LetsFocus/goLF/configs"
 	"github.com/LetsFocus/goLF/database"
 	"github.com/LetsFocus/goLF/goLF/model"
@@ -19,5 +20,8 @@ func New() model.GoLF {
 	database.InitializeES(&goLF, "")
 
 	goLF.Metrics = metrics.NewMetricsServer()
+	
+	goLF.CLI = cmd.NewCLI()
+
 	return goLF
 }

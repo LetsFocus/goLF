@@ -1,4 +1,4 @@
-package shelLF
+package cmd
 
 import (
 	"flag"
@@ -9,18 +9,22 @@ import (
 
 func TestNewCLI(t *testing.T) {
 	testcases := []struct {
-		desc     string
-		toolName string
+		desc        string
+		toolName    string
+		toolVersion string
 	}{
 		{
-			desc:     "create CLI instance with provided tool name",
-			toolName: "myCLI",
+			desc:        "create CLI instance with provided tool name",
+			toolName:    "myCLI",
+			toolVersion: "0.1",
 		},
 	}
 
 	for i, tc := range testcases {
 		t.Run(tc.desc, func(t *testing.T) {
-			cli := NewCLI(tc.toolName)
+			cli := NewCLI()
+			cli.SetCLIName(tc.toolName)
+			cli.SetCLIVersion(tc.toolVersion)
 
 			if cli == nil {
 				t.Errorf("Test[%d] FAILED: NewCLI(%s) returned nil, expected non-nil CLI instance", i, tc.toolName)
@@ -38,7 +42,7 @@ func TestNewCLI(t *testing.T) {
 }
 
 func TestAddCommand(t *testing.T) {
-	cli := NewCLI("myCLI")
+	cli := NewCLI()
 
 	testCommand := Command{
 		Name:        "testCommand",
@@ -60,7 +64,7 @@ func TestAddCommand(t *testing.T) {
 }
 
 func TestAddFlags(t *testing.T) {
-	cli := NewCLI("myCLI")
+	cli := NewCLI()
 
 	testCommand := Command{
 		Name:        "testCommand",
@@ -99,7 +103,7 @@ func TestAddFlags(t *testing.T) {
 }
 
 func TestCLI_Run(t *testing.T) {
-	cli := NewCLI("myCLI")
+	cli := NewCLI()
 
 	testCommand := Command{
 		Name:        "testCommand",
