@@ -3,58 +3,102 @@ package shelLF
 import (
 	"flag"
 	"log"
-	"reflect"
-	"strings"
+	"os"
+	"time"
 )
 
-func NewCommandManager() *CommandManager {
-	return &CommandManager{}
+func NewCLI(toolName string) *CLI {
+	commandMap := make(map[string]*Command)
+	return &CLI{toolName: toolName, commands: commandMap}
 }
 
-func (cli *CommandManager) AddCommand(name string, descrition string, task interface{}) {
-	command := &Command{
-		Name:        name,
-		Description: descrition,
-		Task:        task,
+func (cli *CLI) AddCommand(cmd Command) {
+	cli.commands[cmd.Name] = &cmd
+}
+
+func (cli *CLI) printUsage() {
+	log.Printf("Usage: %s <command> [options]", cli.toolName)
+	log.Println("Available commands:")
+	for _, cmd := range cli.commands {
+		log.Printf("  %s\t%s\n", cmd.Name, cmd.Description)
 	}
-	cli.commands = append(cli.commands, command)
 }
 
-func (cli *CommandManager) Run() {
-	flag.Parse()
-	args := flag.Args()
+func (cli *CLI) Run() {
+	if len(os.Args) <= 1 || os.Args[1] == "help" {
+		cli.printUsage()
+		os.Exit(1)
+	}
 
-	if len(args) == 0 || args[0] == "help" {
-		log.Printf("Usage: go run main.go <command> [arguments]\n")
-		log.Printf("Available commands:\n")
-		for _, cmd := range cli.commands {
-			log.Printf("%s: %s\n", cmd.Name, cmd.Description)
+	cmdName := os.Args[1]
+	cmd, ok := cli.commands[cmdName]
+	if ok {
+		if err := cmd.Flags.Parse(os.Args[2:]); err != nil {
+            log.Fatalf("Error parsing flags for command '%s': %v", cmd.Name, err)
+        }
+		flagMap := make(map[string]interface{})
+		for flagName, flagValue := range cmd.FlagMap {
+			switch value := flagValue.(type) {
+			case *string:
+				flagMap[flagName] = *value
+			case *int:
+				flagMap[flagName] = *value
+			case *bool:
+				flagMap[flagName] = *value
+			case *int64:
+				flagMap[flagName] = *value
+			case *uint:
+				flagMap[flagName] = *value
+			case *uint64:
+				flagMap[flagName] = *value
+			case *float64:
+				flagMap[flagName] = *value
+			case *time.Duration:
+				flagMap[flagName] = *value
+			}
+		}
+		err := cmd.Task(flagMap)
+		if err != nil {
+			log.Fatalf("Error executing command '%s': %v\n", cmd.Name, err)
 		}
 		return
+	} else {
+		log.Printf("Error: Unknown command '%s'\n", cmdName)
+		cli.printUsage()
+		os.Exit(1)
 	}
+}
 
-	commandName := args[0]
-	for _, cmd := range cli.commands {
-		if cmd.Name == commandName {
-			var cmdArgs []reflect.Value
-			numCmdArgs := reflect.TypeOf(cmd.Task).NumIn()
-			numArgs := len(args[1:])
-			if numArgs != numCmdArgs {
-				log.Printf("Provided arguments didn't match expected arguments of %s", cmd.Name)
-				return
-			}
-			for _, arg := range args[1:] {
-				parts := strings.SplitN(arg, "=", 2)
-				if len(parts) != 2 {
-					log.Printf("Invalid argument format: %s", arg)
-					return
-				}
-				cmdArgs = append(cmdArgs, reflect.ValueOf(parts[1]))
-			}
-			reflect.ValueOf(cmd.Task).Call(cmdArgs)
-			return
+func (cli *CLI) AddFlags(command string, cmdFlags []Flags) {
+	_, ok := cli.commands[command]
+	if !ok {
+		log.Printf("Error: Invalid command '%s'\n", command)
+		cli.printUsage()
+		os.Exit(1)
+	}
+	flagsToCmd := flag.NewFlagSet(cli.commands[command].Name, flag.ExitOnError)
+	flagMap := make(map[string]interface{})
+	for _, value := range cmdFlags {
+		switch value.Type {
+		case STRING:
+			flagMap[value.Name] = flagsToCmd.String(value.Name, value.Default.(string), value.Help)
+		case INT:
+			flagMap[value.Name] = flagsToCmd.Int(value.Name, value.Default.(int), value.Help)
+		case INT64:
+			flagMap[value.Name] = flagsToCmd.Int64(value.Name, value.Default.(int64), value.Help)
+		case UINT:
+			flagMap[value.Name] = flagsToCmd.Uint(value.Name, value.Default.(uint), value.Help)
+		case UINT64:
+			flagMap[value.Name] = flagsToCmd.Uint64(value.Name, value.Default.(uint64), value.Help)
+		case FLOAT64:
+			flagMap[value.Name] = flagsToCmd.Float64(value.Name, value.Default.(float64), value.Help)
+		case BOOL:
+			flagMap[value.Name] = flagsToCmd.Bool(value.Name, value.Default.(bool), value.Help)
+		case DURATION:
+			flagMap[value.Name] = flagsToCmd.Duration(value.Name, value.Default.(time.Duration), value.Help)
 		}
 	}
 
-	log.Printf("Command not found: %s\n", commandName)
+	cli.commands[command].FlagMap = flagMap
+	cli.commands[command].Flags = flagsToCmd
 }
