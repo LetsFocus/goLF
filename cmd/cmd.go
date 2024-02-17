@@ -3,22 +3,17 @@ package cmd
 import (
 	"flag"
 	"os"
+	"strconv"
+
 	"time"
 
 	"github.com/LetsFocus/goLF/logger"
 )
 
-func NewCLI() *CLI {
+func NewCMD() *CLI {
 	commandMap := make(map[string]*Command)
-	return &CLI{toolName: "myTool", commands: commandMap}
-}
-
-func (cli *CLI) SetCLIName(toolName string) {
-	cli.toolName = toolName
-}
-
-func (cli *CLI) SetCLIVersion(toolVersion string) {
-	cli.version = toolVersion
+	logger := logger.NewCustomLogger()
+	return &CLI{commands: commandMap, logger: logger}
 }
 
 func (cli *CLI) AddCommand(cmd Command) {
@@ -26,26 +21,24 @@ func (cli *CLI) AddCommand(cmd Command) {
 }
 
 func (cli *CLI) printUsage() {
-	logger := logger.NewCustomLogger()
-	logger.Infof("Usage: %s <command> [options]", cli.toolName)
-	logger.Infof("Available commands:")
+	cli.logger.Infof("Usage: %s <command> [options]", cli.ToolName)
+	cli.logger.Infof("Available commands:")
 	for _, cmd := range cli.commands {
-		logger.Infof("What is my command: %s\n", cmd.Name)
-		logger.Infof("What I do: %s\n", cmd.Description)
-		logger.Infof("What I accept:")
+		cli.logger.Infof("What is my command: %s\n", cmd.Name)
+		cli.logger.Infof("What I do: %s\n", cmd.Description)
+		cli.logger.Infof("What I accept:")
 		cmd.Flags.PrintDefaults()
 	}
 }
 
 func (cli *CLI) Run() {
-	logger := logger.NewCustomLogger()
 	if len(os.Args) <= 1 || os.Args[1] == "-h" {
 		cli.printUsage()
 		os.Exit(1)
 	}
 
 	if os.Args[1] == "-v" || os.Args[1] == "--version" {
-		logger.Infof("version: %s", cli.version)
+		cli.logger.Infof("version: %s", cli.Version)
 		os.Exit(1)
 	}
 
@@ -53,7 +46,7 @@ func (cli *CLI) Run() {
 	cmd, ok := cli.commands[cmdName]
 	if ok {
 		if err := cmd.Flags.Parse(os.Args[2:]); err != nil {
-			logger.Errorf("Error parsing flags for command '%s': %v", cmd.Name, err)
+			cli.logger.Errorf("Error parsing flags for command '%s': %v", cmd.Name, err)
 			os.Exit(1)
 		}
 
@@ -72,6 +65,8 @@ func (cli *CLI) Run() {
 				flagMap[flagName] = *value
 			case *uint64:
 				flagMap[flagName] = *value
+			case *float32:
+				flagMap[flagName] = *value
 			case *float64:
 				flagMap[flagName] = *value
 			case *time.Duration:
@@ -80,21 +75,20 @@ func (cli *CLI) Run() {
 		}
 		err := cmd.Task(flagMap)
 		if err != nil {
-			logger.Errorf("Error executing command '%s': %v\n", cmd.Name, err)
+			cli.logger.Errorf("Error executing command '%s': %v\n", cmd.Name, err)
 		}
 		return
 	} else {
-		logger.Errorf("Error: Unknown command '%s'\n", cmdName)
+		cli.logger.Errorf("Error: Unknown command '%s'\n", cmdName)
 		cli.printUsage()
 		os.Exit(1)
 	}
 }
 
 func (cli *CLI) AddFlags(command string, cmdFlags []Flags) {
-	logger := logger.NewCustomLogger()
 	_, ok := cli.commands[command]
 	if !ok {
-		logger.Errorf("Error: Invalid command '%s'\n", command)
+		cli.logger.Errorf("Error: Invalid command '%s'\n", command)
 		cli.printUsage()
 		os.Exit(1)
 	}
@@ -112,6 +106,18 @@ func (cli *CLI) AddFlags(command string, cmdFlags []Flags) {
 			flagMap[value.Name] = flagsToCmd.Uint(value.Name, value.Default.(uint), value.Help)
 		case UINT64:
 			flagMap[value.Name] = flagsToCmd.Uint64(value.Name, value.Default.(uint64), value.Help)
+		case FLOAT32:
+			str := strconv.FormatFloat(float64(value.Default.(float32)), 'f', -1, 32)
+			floatToStringFlag := flagsToCmd.String(value.Name, str, value.Help)
+			stringValue := *floatToStringFlag
+			floatValue, err := strconv.ParseFloat(stringValue, 32)
+			if err != nil {
+				cli.logger.Errorf("Error: Invalid float value '%v'\n", err)
+				cli.printUsage()
+				os.Exit(1)
+			}
+			float32Val := float32(floatValue)
+			flagMap[value.Name] = &float32Val
 		case FLOAT64:
 			flagMap[value.Name] = flagsToCmd.Float64(value.Name, value.Default.(float64), value.Help)
 		case BOOL:

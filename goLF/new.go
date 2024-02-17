@@ -20,8 +20,25 @@ func New() model.GoLF {
 	database.InitializeES(&goLF, "")
 
 	goLF.Metrics = metrics.NewMetricsServer()
-	
-	goLF.CLI = cmd.NewCLI()
+
+	return goLF
+}
+
+func NewCMD() model.GoLF {
+	var goLF model.GoLF
+
+	goLF.Logger = logger.NewCustomLogger()
+	goLF.Config = configs.NewConfig(goLF.Logger)
+
+	database.InitializeDB(&goLF, "")
+	database.InitializeRedis(&goLF, "")
+	database.InitializeES(&goLF, "")
+
+	goLF.Metrics = metrics.NewMetricsServer()
+
+	goLF.CLI = cmd.NewCMD()
+	goLF.CLI.ToolName = goLF.Config.Get("CMD_TOOL_NAME")
+	goLF.CLI.Version = goLF.Config.Get("CMD_TOOL_VERSION")
 
 	return goLF
 }

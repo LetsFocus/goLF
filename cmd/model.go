@@ -1,6 +1,10 @@
 package cmd
 
-import "flag"
+import (
+	"flag"
+
+	"github.com/LetsFocus/goLF/logger"
+)
 
 const (
 	STRING   = "string"
@@ -10,6 +14,7 @@ const (
 	UINT     = "uint"
 	UINT64   = "uint64"
 	FLOAT64  = "float64"
+	FLOAT32  = "float32"
 	DURATION = "duration"
 )
 
@@ -29,7 +34,8 @@ type Command struct {
 }
 
 type CLI struct {
-	toolName string
-	version  string
+	ToolName string
+	Version  string
+	logger   *logger.CustomLogger
 	commands map[string]*Command
 }

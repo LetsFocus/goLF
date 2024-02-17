@@ -18,6 +18,7 @@ type GoLF struct {
 	Metrics *metrics.Metrics
 	CLI     *cmd.CLI
 }
+
 type RedisDB struct {
 	Redis        *redis.Client
 	RedisCLuster *redis.ClusterClient
