@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -21,12 +22,12 @@ func (cli *CLI) AddCommand(cmd Command) {
 }
 
 func (cli *CLI) printUsage() {
-	cli.logger.Infof("Usage: %s <command> [options]", cli.ToolName)
-	cli.logger.Infof("Available commands:")
+	fmt.Printf("Usage: %s <command> [options]", cli.ToolName)
+	fmt.Printf("Available commands:")
 	for _, cmd := range cli.commands {
-		cli.logger.Infof("What is my command: %s\n", cmd.Name)
-		cli.logger.Infof("What I do: %s\n", cmd.Description)
-		cli.logger.Infof("What I accept:")
+		fmt.Printf("What is my command: %s\n", cmd.Name)
+		fmt.Printf("What I do: %s\n", cmd.Description)
+		fmt.Printf("What I accept:")
 		cmd.Flags.PrintDefaults()
 	}
 }
