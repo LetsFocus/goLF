@@ -17,7 +17,10 @@ func NewCMD() *CLI {
 }
 
 func (cli *CLI) AddCommand(cmd Command) {
+	flagMap := make(map[string]interface{})
 	cli.commands[cmd.Name] = &cmd
+	cli.commands[cmd.Name].FlagMap = flagMap
+	cli.commands[cmd.Name].Flags = flag.NewFlagSet(cmd.Name, flag.ExitOnError)
 }
 
 func (cli *CLI) printUsage() {
@@ -90,29 +93,25 @@ func (cli *CLI) AddFlags(command string, cmdFlags []Flags) {
 		cli.printUsage()
 		os.Exit(1)
 	}
-	flagsToCmd := flag.NewFlagSet(cli.commands[command].Name, flag.ExitOnError)
-	flagMap := make(map[string]interface{})
+
 	for _, value := range cmdFlags {
 		switch value.Type {
 		case STRING:
-			flagMap[value.Name] = flagsToCmd.String(value.Name, value.Default.(string), value.Help)
+			cli.commands[command].FlagMap[value.Name] = cli.commands[command].Flags.String(value.Name, value.Default.(string), value.Help)
 		case INT:
-			flagMap[value.Name] = flagsToCmd.Int(value.Name, value.Default.(int), value.Help)
+			cli.commands[command].FlagMap[value.Name] = cli.commands[command].Flags.Int(value.Name, value.Default.(int), value.Help)
 		case INT64:
-			flagMap[value.Name] = flagsToCmd.Int64(value.Name, value.Default.(int64), value.Help)
+			cli.commands[command].FlagMap[value.Name] = cli.commands[command].Flags.Int64(value.Name, value.Default.(int64), value.Help)
 		case UINT:
-			flagMap[value.Name] = flagsToCmd.Uint(value.Name, value.Default.(uint), value.Help)
+			cli.commands[command].FlagMap[value.Name] = cli.commands[command].Flags.Uint(value.Name, value.Default.(uint), value.Help)
 		case UINT64:
-			flagMap[value.Name] = flagsToCmd.Uint64(value.Name, value.Default.(uint64), value.Help)
+			cli.commands[command].FlagMap[value.Name] = cli.commands[command].Flags.Uint64(value.Name, value.Default.(uint64), value.Help)
 		case FLOAT64:
-			flagMap[value.Name] = flagsToCmd.Float64(value.Name, value.Default.(float64), value.Help)
+			cli.commands[command].FlagMap[value.Name] = cli.commands[command].Flags.Float64(value.Name, value.Default.(float64), value.Help)
 		case BOOL:
-			flagMap[value.Name] = flagsToCmd.Bool(value.Name, value.Default.(bool), value.Help)
+			cli.commands[command].FlagMap[value.Name] = cli.commands[command].Flags.Bool(value.Name, value.Default.(bool), value.Help)
 		case DURATION:
-			flagMap[value.Name] = flagsToCmd.Duration(value.Name, value.Default.(time.Duration), value.Help)
+			cli.commands[command].FlagMap[value.Name] = cli.commands[command].Flags.Duration(value.Name, value.Default.(time.Duration), value.Help)
 		}
 	}
-
-	cli.commands[command].FlagMap = flagMap
-	cli.commands[command].Flags = flagsToCmd
 }
