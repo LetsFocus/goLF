@@ -1,4 +1,4 @@
-package elasticstack
+package database
 
 import (
 	"net/http"
@@ -74,6 +74,8 @@ func InitializeES(golf *model.GoLF, prefix string) {
 		idleConnectionTimeout = 10
 	}
 
+	addressesString := golf.Config.Get(prefix + "ES_ADDRESSES")
+
 	c := esConfig{
 		addresses:             cleanAddresses(golf.Config.Get(prefix + "ES_ADDRESSES")),
 		username:              golf.Config.Get(prefix + "ES_USERNAME"),
@@ -86,7 +88,7 @@ func InitializeES(golf *model.GoLF, prefix string) {
 		idleConnectionTimeout: idleConnectionTimeout,
 	}
 
-	if len(c.addresses) > 0 {
+	if addressesString!="" {
 		client, err := establishESConnection(golf.Logger, c)
 		if err == nil {
 			golf.Elasticsearch = client

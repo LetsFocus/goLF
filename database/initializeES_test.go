@@ -1,4 +1,4 @@
-package elasticstack
+package database
 
 import (
 	"strings"
@@ -12,7 +12,7 @@ import (
 	"github.com/LetsFocus/goLF/logger"
 )
 
-func Test_establishDBConnection(t *testing.T) {
+func Test_establishESConnection(t *testing.T) {
 	log := logger.NewCustomLogger()
 
 	testcases := []struct {
@@ -33,7 +33,7 @@ func Test_establishDBConnection(t *testing.T) {
 	}
 }
 
-func Test_InitializeDB(t *testing.T) {
+func Test_InitializeES(t *testing.T) {
 	t.Setenv("ES_ADDRESSES", "http://localhost:9200")
 	t.Setenv("ES_USERNAME", "")
 	t.Setenv("ES_PASSWORD", "")

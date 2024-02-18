@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 
+	"github.com/LetsFocus/goLF/cmd"
 	"github.com/LetsFocus/goLF/configs"
 	"github.com/LetsFocus/goLF/logger"
 	"github.com/LetsFocus/goLF/metrics"
@@ -15,7 +16,9 @@ type GoLF struct {
 	Config  configs.Config
 	Logger  *logger.CustomLogger
 	Metrics *metrics.Metrics
+	*cmd.CLI
 }
+
 type RedisDB struct {
 	Redis        *redis.Client
 	RedisCLuster *redis.ClusterClient
