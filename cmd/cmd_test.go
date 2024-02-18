@@ -74,7 +74,6 @@ func TestAddFlags(t *testing.T) {
 		{Name: "uintFlag", Type: UINT, Default: uint(42), Help: "Uint flag"},
 		{Name: "uint64Flag", Type: UINT64, Default: uint64(42), Help: "Uint64 flag"},
 		{Name: "float64Flag", Type: FLOAT64, Default: 42.0, Help: "Float64 flag"},
-		{Name: "float32Flag", Type: FLOAT32, Default: float32(42.0), Help: "Float32 flag"},
 		{Name: "boolFlag", Type: BOOL, Default: true, Help: "Boolean flag"},
 		{Name: "durationFlag", Type: DURATION, Default: 5 * time.Second, Help: "Duration flag"},
 	}
@@ -115,7 +114,6 @@ func TestCLI_Run(t *testing.T) {
 		{Name: "uintFlag", Type: UINT, Default: uint(42), Help: "Uint flag"},
 		{Name: "uint64Flag", Type: UINT64, Default: uint64(42), Help: "Uint64 flag"},
 		{Name: "float64Flag", Type: FLOAT64, Default: 42.0, Help: "Float64 flag"},
-		{Name: "float32Flag", Type: FLOAT32, Default: float32(42.0), Help: "Float32 flag"},
 		{Name: "boolFlag", Type: BOOL, Default: true, Help: "Boolean flag"},
 		{Name: "durationFlag", Type: DURATION, Default: 5 * time.Second, Help: "Duration flag"},
 	}
@@ -125,6 +123,6 @@ func TestCLI_Run(t *testing.T) {
 	os.Args = []string{"myCLI", "testCommand", "-stringFlag=test", "-intFlag=42", "-boolFlag=true"}
 	cli.Run()
 
-	os.Args = []string{"myCLI", "testCommand", "-stringFlag=test", "-intFlag=42", "-boolFlag=true", "-int64Flag=420", "-uintFlag=42", "-uint64Flag=420", "-float64Flag=4.2", "-float32Flag=4.2", "-durationFlag=5s"}
+	os.Args = []string{"myCLI", "testCommand", "-stringFlag=test", "-intFlag=42", "-boolFlag=true", "-int64Flag=420", "-uintFlag=42", "-uint64Flag=420", "-float64Flag=4.2", "-durationFlag=5s"}
 	cli.Run()
 }

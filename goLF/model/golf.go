@@ -16,7 +16,7 @@ type GoLF struct {
 	Config  configs.Config
 	Logger  *logger.CustomLogger
 	Metrics *metrics.Metrics
-	CLI     *cmd.CLI
+	*cmd.CLI
 }
 
 type RedisDB struct {

@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
 
 	"time"
 
@@ -14,7 +13,7 @@ import (
 func NewCMD() *CLI {
 	commandMap := make(map[string]*Command)
 	logger := logger.NewCustomLogger()
-	return &CLI{commands: commandMap, logger: logger}
+	return &CLI{ToolName: "myTool", Version: "0.0", commands: commandMap, logger: logger}
 }
 
 func (cli *CLI) AddCommand(cmd Command) {
@@ -22,12 +21,12 @@ func (cli *CLI) AddCommand(cmd Command) {
 }
 
 func (cli *CLI) printUsage() {
-	fmt.Printf("Usage: %s <command> [options]", cli.ToolName)
-	fmt.Printf("Available commands:")
+	fmt.Printf("Usage: %s <command> [options]\n", cli.ToolName)
+	fmt.Println("Available commands:")
 	for _, cmd := range cli.commands {
 		fmt.Printf("What is my command: %s\n", cmd.Name)
 		fmt.Printf("What I do: %s\n", cmd.Description)
-		fmt.Printf("What I accept:")
+		fmt.Println("What I accept:")
 		cmd.Flags.PrintDefaults()
 	}
 }
@@ -65,8 +64,6 @@ func (cli *CLI) Run() {
 			case *uint:
 				flagMap[flagName] = *value
 			case *uint64:
-				flagMap[flagName] = *value
-			case *float32:
 				flagMap[flagName] = *value
 			case *float64:
 				flagMap[flagName] = *value
@@ -107,18 +104,6 @@ func (cli *CLI) AddFlags(command string, cmdFlags []Flags) {
 			flagMap[value.Name] = flagsToCmd.Uint(value.Name, value.Default.(uint), value.Help)
 		case UINT64:
 			flagMap[value.Name] = flagsToCmd.Uint64(value.Name, value.Default.(uint64), value.Help)
-		case FLOAT32:
-			str := strconv.FormatFloat(float64(value.Default.(float32)), 'f', -1, 32)
-			floatToStringFlag := flagsToCmd.String(value.Name, str, value.Help)
-			stringValue := *floatToStringFlag
-			floatValue, err := strconv.ParseFloat(stringValue, 32)
-			if err != nil {
-				cli.logger.Errorf("Error: Invalid float value '%v'\n", err)
-				cli.printUsage()
-				os.Exit(1)
-			}
-			float32Val := float32(floatValue)
-			flagMap[value.Name] = &float32Val
 		case FLOAT64:
 			flagMap[value.Name] = flagsToCmd.Float64(value.Name, value.Default.(float64), value.Help)
 		case BOOL:

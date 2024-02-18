@@ -14,7 +14,6 @@ const (
 	UINT     = "uint"
 	UINT64   = "uint64"
 	FLOAT64  = "float64"
-	FLOAT32  = "float32"
 	DURATION = "duration"
 )
 
