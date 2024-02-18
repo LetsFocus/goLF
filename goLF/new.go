@@ -38,7 +38,13 @@ func NewCMD() model.GoLF {
 
 	goLF.CLI = cmd.NewCMD()
 	goLF.CLI.ToolName = goLF.Config.Get("CMD_TOOL_NAME")
+	if goLF.CLI.ToolName==""{
+		goLF.CLI.ToolName = "myTool"
+	}
 	goLF.CLI.Version = goLF.Config.Get("CMD_TOOL_VERSION")
+	if goLF.CLI.Version=="" {
+		goLF.CLI.Version = "0.0.0"
+	}
 
 	return goLF
 }

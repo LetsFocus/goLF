@@ -41,8 +41,8 @@ func TestAddCommand(t *testing.T) {
 	testCommand := Command{
 		Name:        "testCommand",
 		Description: "This is a test command",
-		Flags:       flag.NewFlagSet("testCommandFlags", flag.ExitOnError),
-		FlagMap:     make(map[string]interface{}),
+		flags:       flag.NewFlagSet("testCommandFlags", flag.ExitOnError),
+		flagMap:     make(map[string]interface{}),
 		Task: func(flags map[string]interface{}) error {
 			return nil
 		},
@@ -84,12 +84,12 @@ func TestAddFlags(t *testing.T) {
 	if !ok {
 		t.Fatal("Failed to retrieve added command")
 	}
-	if addedCommand.Flags == nil {
+	if addedCommand.flags == nil {
 		t.Fatal("Flags were not initialized for the command")
 	}
 
 	for _, flag := range testFlags {
-		_, ok := addedCommand.FlagMap[flag.Name]
+		_, ok := addedCommand.flagMap[flag.Name]
 		if !ok {
 			t.Errorf("Flag '%s' was not added to the command", flag.Name)
 		}

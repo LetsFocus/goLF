@@ -27,8 +27,8 @@ type Flags struct {
 type Command struct {
 	Name        string
 	Description string
-	Flags       *flag.FlagSet
-	FlagMap     map[string]interface{}
+	flags       *flag.FlagSet
+	flagMap     map[string]interface{}
 	Task        func(flags map[string]interface{}) error
 }
 
