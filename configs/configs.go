@@ -1,9 +1,10 @@
 package configs
 
 import (
+	"os"
+
 	"github.com/LetsFocus/goLF/slogs"
 	"github.com/joho/godotenv"
-	"os"
 )
 
 func NewConfig(log slogs.Log, path string) Config {
@@ -25,11 +26,11 @@ type Configs interface {
 	GetPath() string
 }
 
-func (c Config) Get(key string) string {
+func (c *Config) Get(key string) string {
 	return os.Getenv(key)
 }
 
-func (c Config) GetPath() []string {
+func (c *Config) GetPath() []string {
 	return c.path
 }
 
@@ -46,9 +47,11 @@ func (c *Config) LoadConfigs(log slogs.Log, path string) {
 
 	if env != "" {
 		envPath = append(envPath, location+".env")
+		envPath = append(envPath, location+".local.env")
 		envPath = append(envPath, location+env+".env")
 	} else {
 		envPath = append(envPath, location+".env")
+		envPath = append(envPath, location+".local.env")
 	}
 
 	if err := godotenv.Load(envPath...); err != nil {

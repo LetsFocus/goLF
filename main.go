@@ -9,17 +9,16 @@ import (
 )
 
 func main() {
-	goLF.New()
-	logger := slogs.NewLogger()
+	g := goLF.New()
 
-	logger.Logger.Info("hello")
-	logger.Logger.Error("error")
-	logger.Logger.Warn("Warn")
-	logger.Logger.Debug("debug")
+	g.Logger.Logger.Info("hello")
+	g.Logger.Logger.Error("error")
+	g.Logger.Logger.Warn("Warn")
+	g.Logger.Logger.Debug("debug")
 
-	logger.Logger.Info(os.Getenv("LOG_LEVEL"))
+	g.Logger.Logger.Info(g.Config.Get("LOG_LEVEL"))
 
-	go test(logger)
+	//go test(g.Logger)
 
 	http.ListenAndServe(":8000", nil)
 }
