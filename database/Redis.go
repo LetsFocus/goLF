@@ -2,12 +2,12 @@ package database
 
 import (
 	"context"
+	"github.com/LetsFocus/goLF/goLF/model"
 	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/LetsFocus/goLF/goLF/model"
 	"github.com/LetsFocus/goLF/logger"
 )
 

@@ -96,7 +96,7 @@ func Test_MonitoringDB(t *testing.T) {
 		{
 			desc: "successfully monitored the db",
 			input: &model.GoLF{
-				Database: model.Database{Postgres: db},
+				Database: model.Database{Pg: db},
 				Config:   configs.Config{Log: logger.NewCustomLogger()},
 				Logger:   logger.NewCustomLogger(),
 			},
@@ -110,7 +110,7 @@ func Test_MonitoringDB(t *testing.T) {
 		{
 			desc: "retry is less than retryCount",
 			input: &model.GoLF{
-				Database: model.Database{Postgres: db},
+				Database: model.Database{Pg: db},
 				Config:   configs.Config{Log: logger.NewCustomLogger()},
 				Logger:   logger.NewCustomLogger(),
 			},
@@ -124,7 +124,7 @@ func Test_MonitoringDB(t *testing.T) {
 		{
 			desc: "DbConfigs are invalid",
 			input: &model.GoLF{
-				Database: model.Database{Postgres: db},
+				Database: model.Database{Pg: db},
 				Config:   configs.Config{Log: logger.NewCustomLogger()},
 				Logger:   logger.NewCustomLogger(),
 			},

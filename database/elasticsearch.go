@@ -1,14 +1,13 @@
 package database
 
 import (
+	"github.com/LetsFocus/goLF/goLF/model"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/elastic/go-elasticsearch/v8"
 
-	"github.com/LetsFocus/goLF/goLF/model"
 	"github.com/LetsFocus/goLF/logger"
 )
 
@@ -22,19 +21,6 @@ type esConfig struct {
 	maxOpenConns          int
 	maxIdleConns          int
 	idleConnectionTimeout int
-}
-
-func cleanAddresses(addressesString string) []string {
-	addressesList := strings.Split(addressesString, ",")
-
-	var addressesSlice []string
-
-	for _, address := range addressesList {
-		trimmedAddress := strings.TrimSpace(address)
-		addressesSlice = append(addressesSlice, trimmedAddress)
-	}
-
-	return addressesSlice
 }
 
 func InitializeES(golf *model.GoLF, prefix string) {
@@ -77,7 +63,7 @@ func InitializeES(golf *model.GoLF, prefix string) {
 	addressesString := golf.Config.Get(prefix + "ES_ADDRESSES")
 
 	c := esConfig{
-		addresses:             cleanAddresses(golf.Config.Get(prefix + "ES_ADDRESSES")),
+		addresses:             cleanAddresses(addressesString),
 		username:              golf.Config.Get(prefix + "ES_USERNAME"),
 		password:              golf.Config.Get(prefix + "ES_PASSWORD"),
 		maxRetries:            maxRetries,
@@ -88,7 +74,7 @@ func InitializeES(golf *model.GoLF, prefix string) {
 		idleConnectionTimeout: idleConnectionTimeout,
 	}
 
-	if addressesString!="" {
+	if addressesString != "" {
 		client, err := establishESConnection(golf.Logger, c)
 		if err == nil {
 			golf.Elasticsearch = client
