@@ -45,7 +45,7 @@ func (d DBConfig) GetMaxRetryDuration() int {
 	return d.RetryDuration
 }
 
-func InitializeDB(log *logger.CustomLogger, c DBConfig) (DB, error) {
+func InitializeDB(log *logger.CustomLogger, c *DBConfig) (DB, error) {
 	if c.Host != "" && c.Port != "" && c.User != "" && c.Password != "" && c.Dialect != "" {
 		if c.SslMode == "" {
 			c.SslMode = "disable"
@@ -81,7 +81,7 @@ func (d *DB) HealthCheckSQL() types.Health {
 	return types.Health{Status: Up, Name: SQL}
 }
 
-func GenerateConnectionString(c DBConfig) string {
+func GenerateConnectionString(c *DBConfig) string {
 	switch c.Dialect {
 	case "mysql":
 		return fmt.Sprintf("%s:%s@tcp(%s:%v)/%s", c.User, c.Password, c.Host, c.Port, c.DBName)
@@ -93,7 +93,7 @@ func GenerateConnectionString(c DBConfig) string {
 }
 
 func EstablishDBConnection(log *logger.CustomLogger, c *DBConfig) (*sql.DB, error) {
-	connectionString := GenerateConnectionString(*c)
+	connectionString := GenerateConnectionString(c)
 	if connectionString == "" {
 		log.Error("invalid dialect given")
 		return nil, errors.Errors{StatusCode: http.StatusInternalServerError, Code: http.StatusText(http.StatusInternalServerError),

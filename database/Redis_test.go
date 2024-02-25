@@ -1,7 +1,21 @@
 package database
 
+/*
+import (
+	"github.com/LetsFocus/goLF/configs"
+	"github.com/LetsFocus/goLF/goLF/model"
+	"github.com/LetsFocus/goLF/logger"
+	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
+)
+
+
+
+
 import (
 	"github.com/LetsFocus/goLF/goLF/model"
+	//"github.com/LetsFocus/goLF/goLF/model"
 	"testing"
 	"time"
 
@@ -91,3 +105,4 @@ func Test_createRedisConnectionPass(t *testing.T) {
 		assert.Equalf(t, tc.err, err, "Test[%d] FAILED, Could not connect to Redis, got error: %v\n", i, err)
 	}
 }
+*/

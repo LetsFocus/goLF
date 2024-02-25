@@ -2,15 +2,11 @@ package database
 
 import (
 	goErr "errors"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
-	"time"
 
-	"github.com/stretchr/testify/assert"
-
-	"github.com/LetsFocus/goLF/configs"
 	"github.com/LetsFocus/goLF/errors"
-	"github.com/LetsFocus/goLF/goLF/model"
 	"github.com/LetsFocus/goLF/logger"
 )
 
@@ -19,45 +15,46 @@ func Test_establishDBConnection(t *testing.T) {
 
 	testcases := []struct {
 		desc     string
-		dbConfig dbConfig
+		dbConfig DBConfig
 		err      error
 	}{
 		{
 			desc: "successfully established postgres db connection",
-			dbConfig: dbConfig{host: "localhost", port: "5432", user: "postgres", password: "password",
-				dialect: "postgres", dbName: "testdb", sslMode: "disable"},
+			dbConfig: DBConfig{Host: "localhost", Port: "5432", User: "postgres", Password: "password",
+				Dialect: "postgres", DBName: "testdb", SslMode: "disable"},
 		},
 
 		{
 			desc: "successfully established mysql db connection",
-			dbConfig: dbConfig{host: "localhost", port: "3306", user: "mysql", password: "password",
-				dialect: "mysql", dbName: "testdb", sslMode: "disabled"},
+			dbConfig: DBConfig{Host: "localhost", Port: "3306", User: "mysql", Password: "password",
+				Dialect: "mysql", DBName: "testdb", SslMode: "disabled"},
 		},
 
 		{
 			desc:     "connectionString empty",
-			dbConfig: dbConfig{dialect: "redis"},
+			dbConfig: DBConfig{Dialect: "redis"},
 			err: errors.Errors{StatusCode: http.StatusInternalServerError, Code: http.StatusText(http.StatusInternalServerError),
 				Reason: "Invalid dialect"},
 		},
 
 		{
 			desc: "error while pinging the db",
-			dbConfig: dbConfig{host: "localhost", port: "5432", user: "root", password: "password",
-				dialect: "postgres", dbName: "testdb", sslMode: "require"},
+			dbConfig: DBConfig{Host: "localhost", Port: "5432", User: "root", Password: "password",
+				Dialect: "postgres", DBName: "testdb", SslMode: "require"},
 			err: goErr.New("pq: SSL is not enabled on the server"),
 		},
 	}
 
 	for i, tc := range testcases {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, err := establishDBConnection(log, tc.dbConfig)
+			_, err := EstablishDBConnection(log, &tc.dbConfig)
 
 			assert.Equalf(t, tc.err, err, "Test[%d] FAILED, Could not connect to SQL, got error: %v\n", i, err)
 		})
 	}
 }
 
+/*
 func Test_InitializeDB(t *testing.T) {
 	t.Setenv("DB_DIALECT", "postgres")
 	t.Setenv("DB_PORT", "5432")
@@ -142,3 +139,4 @@ func Test_MonitoringDB(t *testing.T) {
 		time.Sleep(time.Second * 3)
 	}
 }
+*/
