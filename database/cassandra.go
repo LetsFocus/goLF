@@ -51,7 +51,7 @@ func InitializeCassandra(log *logger.CustomLogger, c *CassandraConfig) (Cassandr
 	return Cassandra{}, nil
 }
 
-func establishCassandraConnection(log *logger.CustomLogger, c CassandraConfig) (*gocql.Session, error) {
+func establishCassandraConnection(log *logger.CustomLogger, c *CassandraConfig) (*gocql.Session, error) {
 	cluster := gocql.NewCluster(c.Addresses...)
 	cluster.Keyspace = c.DB
 

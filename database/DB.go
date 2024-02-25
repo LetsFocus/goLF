@@ -92,8 +92,8 @@ func GenerateConnectionString(c DBConfig) string {
 	return ""
 }
 
-func EstablishDBConnection(log *logger.CustomLogger, c DBConfig) (*sql.DB, error) {
-	connectionString := GenerateConnectionString(c)
+func EstablishDBConnection(log *logger.CustomLogger, c *DBConfig) (*sql.DB, error) {
+	connectionString := GenerateConnectionString(*c)
 	if connectionString == "" {
 		log.Error("invalid dialect given")
 		return nil, errors.Errors{StatusCode: http.StatusInternalServerError, Code: http.StatusText(http.StatusInternalServerError),
