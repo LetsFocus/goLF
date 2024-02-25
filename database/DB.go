@@ -45,7 +45,7 @@ func (d DBConfig) GetMaxRetryDuration() int {
 	return d.RetryDuration
 }
 
-func InitializeDB(log *logger.CustomLogger, c *DBConfig) (DB, error) {
+func InitializeDB(log *logger.CustomLogger, c DBConfig) (DB, error) {
 	if c.Host != "" && c.Port != "" && c.User != "" && c.Password != "" && c.Dialect != "" {
 		if c.SslMode == "" {
 			c.SslMode = "disable"
