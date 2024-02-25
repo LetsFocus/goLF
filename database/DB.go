@@ -11,6 +11,7 @@ import (
 
 	"github.com/LetsFocus/goLF/errors"
 	"github.com/LetsFocus/goLF/logger"
+	"github.com/LetsFocus/goLF/types"
 )
 
 type DBConfig struct {
@@ -30,7 +31,21 @@ type DBConfig struct {
 	RetryDuration         int
 }
 
-func InitializeDB(c DBConfig, log *logger.CustomLogger) (DB, error) {
+func (d DBConfig) GetHost() string {
+	return d.Host
+}
+
+func (d DBConfig) GetDBName() string {
+	return SQL
+}
+func (d DBConfig) GetMaxRetries() int {
+	return d.Retry
+}
+func (d DBConfig) GetMaxRetryDuration() int {
+	return d.RetryDuration
+}
+
+func InitializeDB(log *logger.CustomLogger, c *DBConfig) (DB, error) {
 	if c.Host != "" && c.Port != "" && c.User != "" && c.Password != "" && c.Dialect != "" {
 		if c.SslMode == "" {
 			c.SslMode = "disable"
@@ -48,20 +63,22 @@ func InitializeDB(c DBConfig, log *logger.CustomLogger) (DB, error) {
 
 		sqlDB := DB{DB: db}
 
-		sqlDB.HealthCheck = sqlDB.HealthCheckSQL
-
 		return sqlDB, nil
 	}
 
 	return DB{}, nil
 }
 
-func (d DB) HealthCheckSQL() Health {
-	if err := d.DB.Ping(); err != nil {
-		return Health{Status: Down}
+func (d *DB) HealthCheckSQL() types.Health {
+	if d == nil {
+		return types.Health{Status: Down, Name: SQL}
 	}
 
-	return Health{Status: Up}
+	if err := d.DB.Ping(); err != nil {
+		return types.Health{Status: Down, Name: SQL}
+	}
+
+	return types.Health{Status: Up, Name: SQL}
 }
 
 func GenerateConnectionString(c DBConfig) string {

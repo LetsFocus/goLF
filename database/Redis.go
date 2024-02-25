@@ -2,108 +2,68 @@ package database
 
 import (
 	"context"
-	"github.com/LetsFocus/goLF/goLF/model"
-	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 
 	"github.com/LetsFocus/goLF/logger"
+	"github.com/LetsFocus/goLF/types"
 )
 
-type redisConfig struct {
-	addr           string
-	password       string
-	dB             int
-	retries        int
-	retryTime      time.Duration
-	poolSize       int
-	minIdleConns   int
-	maxIdleConns   int
-	conMaxIdleTime time.Duration
-	connMaxLife    time.Duration
+type RedisConfig struct {
+	Host           string
+	Port           string
+	Addr           string
+	Password       string
+	DB             int
+	Retries        int
+	RetryTime      int
+	PoolSize       int
+	MinIdleConns   int
+	MaxIdleConns   int
+	ConMaxIdleTime time.Duration
+	ConnMaxLife    time.Duration
 }
 
-func InitializeRedis(golf *model.GoLF, prefix string) {
-	host := golf.Config.Get(prefix + "REDIS_HOST")
-	port := golf.Config.Get(prefix + "REDIS_PORT")
-	password := golf.Config.Get(prefix + "REDIS_PASSWORD")
-	dbStr := golf.Config.Get(prefix + "REDIS_DB_NUMBER")
-
-	retry, err := strconv.Atoi(golf.Config.Get(prefix + "REDIS_RETRY_COUNT"))
-	if err != nil {
-		retry = 5
-	}
-
-	retryTime, err := time.ParseDuration(golf.Config.Get(prefix + "REDIS_RETRY_DURATION"))
-	if err != nil {
-		retryTime = time.Duration(5)
-	}
-
-	poolSize, err := strconv.Atoi(golf.Config.Get(prefix + "REDIS_POOL_SIZE"))
-	if err != nil {
-		poolSize = 10
-	}
-
-	minIdleConns, err := strconv.Atoi(golf.Config.Get(prefix + "REDIS_MIN_IDLE_CONNECTIONS"))
-	if err != nil {
-		minIdleConns = 4
-	}
-
-	maxIdleConns, err := strconv.Atoi(golf.Config.Get(prefix + "REDIS_MAX_IDLE_CONNECTIONS"))
-	if err != nil {
-		maxIdleConns = 8
-	}
-
-	conMaxIdleTime, err := time.ParseDuration(golf.Config.Get(prefix + "REDIS_IDLE_CONNECTIONS_TIMEOUT"))
-	if err != nil {
-		conMaxIdleTime = time.Duration(30)
-	}
-
-	conMaxLife, err := time.ParseDuration(golf.Config.Get(prefix + "REDIS_CONNECTIONS_MAX_LIFETIME"))
-	if err != nil {
-		conMaxLife = time.Duration(10)
-	}
-
-	db, err := strconv.Atoi(dbStr)
-	if err != nil && dbStr != "" {
-		golf.Logger.Errorf("invalid db number: %v", err)
-		return
-	}
-
-	if host != "" && port != "" {
-		redisCon := redisConfig{
-			addr:           host + ":" + port,
-			password:       password,
-			dB:             db,
-			retries:        retry,
-			retryTime:      retryTime,
-			poolSize:       poolSize,
-			minIdleConns:   minIdleConns,
-			maxIdleConns:   maxIdleConns,
-			conMaxIdleTime: conMaxIdleTime,
-			connMaxLife:    conMaxLife,
-		}
-
-		client, err := createRedisConnection(&redisCon, golf.Logger)
-		if err == nil {
-			golf.Redis = client
-		}
-	}
+func (r RedisConfig) GetHost() string {
+	return r.Host
 }
 
-func createRedisConnection(config *redisConfig, log *logger.CustomLogger) (*redis.Client, error) {
+func (r RedisConfig) GetDBName() string {
+	return RedisDB
+}
+func (r RedisConfig) GetMaxRetries() int {
+	return r.Retries
+}
+func (r RedisConfig) GetMaxRetryDuration() int {
+	return r.RetryTime
+}
+
+func InitializeRedis(log *logger.CustomLogger, c *RedisConfig) (Redis, error) {
+	if c.Host != "" && c.Port != "" {
+		client, err := createRedisConnection(c, log)
+		if err != nil {
+			return Redis{}, err
+		}
+
+		return Redis{Redis: client}, nil
+	}
+
+	return Redis{}, nil
+}
+
+func createRedisConnection(config *RedisConfig, log *logger.CustomLogger) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
-		Addr:            config.addr,
-		Password:        config.password,
-		DB:              config.dB,
-		MaxRetries:      config.retries,
-		MaxRetryBackoff: config.retryTime * time.Second,
-		PoolSize:        config.poolSize,
-		MinIdleConns:    config.minIdleConns,
-		MaxIdleConns:    config.maxIdleConns,
-		ConnMaxIdleTime: config.conMaxIdleTime * time.Minute,
-		ConnMaxLifetime: config.connMaxLife * time.Second,
+		Addr:            config.Addr,
+		Password:        config.Password,
+		DB:              config.DB,
+		MaxRetries:      config.Retries,
+		MaxRetryBackoff: time.Duration(config.RetryTime) * time.Second,
+		PoolSize:        config.PoolSize,
+		MinIdleConns:    config.MinIdleConns,
+		MaxIdleConns:    config.MaxIdleConns,
+		ConnMaxIdleTime: config.ConMaxIdleTime * time.Minute,
+		ConnMaxLifetime: config.ConnMaxLife * time.Second,
 	})
 
 	// PING to check if Redis is running
@@ -114,4 +74,16 @@ func createRedisConnection(config *redisConfig, log *logger.CustomLogger) (*redi
 	}
 	log.Info("Successfully connected to redis ")
 	return client, nil
+}
+
+func (r *Redis) HealthCheckRedis() types.Health {
+	if r == nil {
+		return types.Health{Status: Down, Name: SQL}
+	}
+
+	if _, err := r.Redis.Ping(context.Background()).Result(); err != nil {
+		return types.Health{Status: Down, Name: SQL}
+	}
+
+	return types.Health{Status: Up, Name: SQL}
 }
