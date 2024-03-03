@@ -2,11 +2,13 @@
 - In main.go
 ```
 app:=goLF.New()
-app.POST("/routes",handler)
-app.GET("/routes",handler)
-app.PATCH("/routes",handler)
+app.POST("/route",handler)
+app.GET("/route",handler)
+app.PATCH("/route",handler)
 app.PUT("/route",handler)
 app.DELETE("/route',handler)
+app.HEAD("/route",handler)
+app.OPTIONS("/route",handler)
 
 err:=app.Run()
 if err!=nil{
