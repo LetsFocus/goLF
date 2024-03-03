@@ -37,7 +37,7 @@ request
 response
 
 ```
-- we need to declare some custom error from our side 
+- we need to declare some custom errors from our side 
 - Add default routes:
    - Metrics route 
    - swagger rendering route
@@ -46,7 +46,11 @@ response
 
 
 
+### Points to remember:
 
+- speed
+- error-prone
+- Bench Marking testing is very important and note down the results.
 
 
 
