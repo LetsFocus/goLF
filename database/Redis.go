@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"reflect"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -76,14 +77,18 @@ func createRedisConnection(config *RedisConfig, log *logger.CustomLogger) (*redi
 	return client, nil
 }
 
-func (r *Redis) HealthCheckRedis() types.Health {
-	if r == nil {
-		return types.Health{Status: Down, Name: SQL}
+func (r Redis) HealthCheckRedis() types.Health {
+	if isEmptyStruct(r) {
+		return types.Health{Status: Down, Name: RedisDB}
 	}
 
 	if _, err := r.Redis.Ping(context.Background()).Result(); err != nil {
-		return types.Health{Status: Down, Name: SQL}
+		return types.Health{Status: Down, Name: RedisDB}
 	}
 
-	return types.Health{Status: Up, Name: SQL}
+	return types.Health{Status: Up, Name: RedisDB}
+}
+
+func isEmptyStruct(s interface{}) bool {
+	return reflect.DeepEqual(s, reflect.Zero(reflect.TypeOf(s)).Interface())
 }

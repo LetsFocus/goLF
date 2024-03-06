@@ -52,7 +52,7 @@ func InitializeDB(log *logger.CustomLogger, c *DBConfig) (DB, error) {
 		}
 
 		db, err := EstablishDBConnection(log, c)
-		if err == nil {
+		if err != nil {
 			return DB{}, err
 		}
 
