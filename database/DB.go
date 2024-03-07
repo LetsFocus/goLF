@@ -69,8 +69,8 @@ func InitializeDB(log *logger.CustomLogger, c *DBConfig) (DB, error) {
 	return DB{}, nil
 }
 
-func (d *DB) HealthCheckSQL() types.Health {
-	if d == nil {
+func (d DB) HealthCheckSQL() types.Health {
+	if isEmptyStruct(d) {
 		return types.Health{Status: Down, Name: SQL}
 	}
 
