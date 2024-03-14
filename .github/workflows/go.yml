@@ -84,7 +84,7 @@ jobs:
 
       - name: Extract coverage percentage
         run: |
-          COVERAGE=$(go tool cover -func=coverage.txt | grep "total:" | awk '{print $3}' | sed 's/%//')
+          COVERAGE=$(go tool cover -func=build/coverage.out | grep "total:" | awk '{print $3}' | sed 's/%//')
 
       - name: Update README with coverage badge
         run: |
