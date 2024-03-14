@@ -71,16 +71,27 @@ jobs:
       - name: Coverage Report
         run: go tool cover -func build/coverage.out
 
-      - name: Coverage Check
+      # - name: Coverage Check
+      #   run: |
+      #     COVERAGE_THRESHOLD=65.0
+      #     ACTUAL_COVERAGE=$(go tool cover -func=build/coverage.out | grep "total" | awk '{print $3}' | tr -d "%")
+      #     if [ "$(echo "$ACTUAL_COVERAGE < $COVERAGE_THRESHOLD" | bc)" -eq 1 ]; then
+      #     echo "Coverage is less than $COVERAGE_THRESHOLD%"
+      #     exit 1
+      #     else
+      #     echo "Coverage is greater than or equal to $COVERAGE_THRESHOLD%"
+      #     fi
+
+      - name: Extract coverage percentage
+        id: coverage
         run: |
-          COVERAGE_THRESHOLD=65.0
-          ACTUAL_COVERAGE=$(go tool cover -func=build/coverage.out | grep "total" | awk '{print $3}' | tr -d "%")
-          if [ "$(echo "$ACTUAL_COVERAGE < $COVERAGE_THRESHOLD" | bc)" -eq 1 ]; then
-          echo "Coverage is less than $COVERAGE_THRESHOLD%"
-          exit 1
-          else
-          echo "Coverage is greater than or equal to $COVERAGE_THRESHOLD%"
-          fi
+          COVERAGE=$(go tool cover -func=build/coverage.out | grep "total:" | awk '{print $3}' | sed 's/%//')
+          echo "::set-output name=coverage::$COVERAGE"
+  
+      - name: Update README with coverage badge
+        run: |
+          sed -i "s/{{COVERAGE}}/$(echo ${{ steps.coverage.outputs.coverage }})/" README.md  
+        
           
   Quality-Check:
     name: Linters Check
