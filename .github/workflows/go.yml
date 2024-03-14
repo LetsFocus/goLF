@@ -82,16 +82,16 @@ jobs:
       #     echo "Coverage is greater than or equal to $COVERAGE_THRESHOLD%"
       #     fi
 
-     - name: Extract coverage percentage
+      - name: Extract coverage percentage
         id: coverage
         run: |
-          COVERAGE=$(go tool cover -func=coverage.txt | grep "total:" | awk '{print $3}' | sed 's/%//')
+          COVERAGE=$(go tool cover -func=build/coverage.out | grep "total:" | awk '{print $3}' | sed 's/%//')
           echo "::set-output name=coverage::$COVERAGE"
-
-     - name: Update README with coverage badge
+  
+      - name: Update README with coverage badge
         run: |
           sed -i "s/{{COVERAGE}}/$(echo ${{ steps.coverage.outputs.coverage }})/" README.md  
-      
+        
           
   Quality-Check:
     name: Linters Check
