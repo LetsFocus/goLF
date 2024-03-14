@@ -82,6 +82,12 @@ jobs:
           echo "Coverage is greater than or equal to $COVERAGE_THRESHOLD%"
           fi
           
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: buid/coverage.out
+          
   Quality-Check:
     name: Linters Check
     runs-on: ubuntu-latest
