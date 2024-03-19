@@ -24,7 +24,7 @@ func handler(ctx *goLF.Context){
     }
 
     // on success response
-    ctx.Response("hii I am done")
+    ctx.Response("hii I am done",statusCode (optional))
 }
 ```
 
