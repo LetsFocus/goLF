@@ -1,8 +1,10 @@
 package errors
 
 import (
-    "fmt"
-    "net/http"
+	"fmt"
+	"github.com/LetsFocus/goLF/logger"
+	"net/http"
+	"strings"
 )
 
 type HTTPError struct {
