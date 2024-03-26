@@ -7,59 +7,46 @@ import (
 	"strings"
 )
 
-type Errors struct {
-	StatusCode int    `json:"statusCode,omitempty"`
-	Code       string `json:"code,omitempty"`
-	Reason     string `json:"reason,omitempty"`
+type HTTPError struct {
+    StatusCode int    `json:"statusCode,omitempty"`
+    Code       string `json:"code,omitempty"`
+    Reason     string `json:"reason,omitempty"`
 }
 
-func (e Errors) Error() string {
-	return fmt.Sprintf("{\n code: %v \n reason: %v\n}", e.Code, e.Reason)
+func (e HTTPError) Error() string {
+    return fmt.Sprintf("{\n code: %v \n reason: %v\n}", e.Code, e.Reason)
 }
 
-func InvalidParam(err []string) error {
-	reason := fmt.Sprintf("parameter " + strings.Join(err, ",") + " is invalid")
-
-	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: reason}
+func NewHTTPError(statusCode int, reason string) *HTTPError {
+    return &HTTPError{
+        StatusCode: statusCode,
+        Code:       http.StatusText(statusCode),
+        Reason:     reason,
+    }
 }
 
-func MissingParam(err []string) error {
-	reason := fmt.Sprintf("parameter " + strings.Join(err, ",") + " is required")
+var (
+    ErrInvalidParam = NewHTTPError(http.StatusBadRequest, "invalid parameter")
+    ErrMissingParam = NewHTTPError(http.StatusBadRequest, "missing parameter")
+    ErrMissingHeaders = NewHTTPError(http.StatusBadRequest, "missing header parameter")
+    ErrInternalServerError = NewHTTPError(http.StatusInternalServerError, "internal server error")
+    ErrServiceCallError = NewHTTPError(http.StatusInternalServerError, "service call error")
+    ErrRowsAffectedError = NewHTTPError(http.StatusInternalServerError, "rows affected error")
+    ErrInvalidBody = NewHTTPError(http.StatusBadRequest, "invalid body")
+)
 
-	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: reason}
+func NewEntityNotFoundError(entity, id string) *HTTPError {
+    return &HTTPError{
+        StatusCode: http.StatusNotFound,
+        Code:       http.StatusText(http.StatusNotFound),
+        Reason:     fmt.Sprintf("no %v found for %v", entity, id),
+    }
 }
 
-func MissingHeaders(err []string) error {
-	reason := fmt.Sprintf("parameter " + strings.Join(err, ",") + " is required in header")
-
-	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: reason}
-}
-
-func InternalServerError(err error) error {
-
-	logger.NewCustomLogger().Errorf("Error from DB, Error: %v", err)
-	return Errors{StatusCode: http.StatusInternalServerError, Code: http.StatusText(http.StatusInternalServerError), Reason: "db error"}
-}
-
-func ServiceCallError(err error) error {
-
-	logger.NewCustomLogger().Errorf("Error from the service, Error: %v", err)
-	return Errors{StatusCode: http.StatusInternalServerError, Code: http.StatusText(http.StatusInternalServerError), Reason: "server failure"}
-}
-
-func RowsAffectedError(err error) error {
-	logger.NewCustomLogger().Errorf("Error from DB, Error: %v", err)
-	return Errors{StatusCode: http.StatusInternalServerError, Code: http.StatusText(http.StatusInternalServerError), Reason: "server is down"}
-}
-
-func InvalidBody() error {
-	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: "invalid body"}
-}
-
-func EntityNotFound(entity, id string) error {
-	return Errors{StatusCode: http.StatusNotFound, Code: http.StatusText(http.StatusNotFound), Reason: fmt.Sprintf("no %v found for %v", entity, id)}
-}
-
-func UnMarshalError() error {
-	return Errors{StatusCode: http.StatusBadRequest, Code: http.StatusText(http.StatusBadRequest), Reason: "incorrect data format"}
+func NewUnmarshalError() *HTTPError {
+    return &HTTPError{
+        StatusCode: http.StatusBadRequest,
+        Code:       http.StatusText(http.StatusBadRequest),
+        Reason:     "incorrect data format",
+    }
 }
