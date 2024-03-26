@@ -14,31 +14,36 @@ type Keys struct {
 }
 
 func CreateJWTToken(algorithm, subject string, header, data map[string]interface{}, keys Keys) (string, error) {
-	switch algorithm {
-		case "RSA":
-			token := jwt.New(jwt.SigningMethodRS512)
-			claims := token.Claims.(jwt.MapClaims)
+    switch algorithm {
+    case "RSA":
+        token := jwt.New(jwt.SigningMethodRS512)
 
-			for key, value := range header {
-				claims[key] = value
-			}
+        // Set token headers
+        for key, value := range header {
+            token.Header[key] = value
+        }
 
-			for key, value := range data {
-				claims[key] = value
-			}
-			
-			claims["sub"] = subject
-			claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
-			
-			tokenString, err := token.SignedString(keys.PrivateKey)
-			if err != nil {
-				return "", err
-			}
-			
-			return tokenString, nil
-	}
+        claims := token.Claims.(jwt.MapClaims)
 
-	return "", nil
+        // Set token claims
+        for key, value := range data {
+            claims[key] = value
+        }
+
+        // Set subject and expiration claims
+        claims["sub"] = subject
+        claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+
+        // Sign the token
+        tokenString, err := token.SignedString(keys.PrivateKey)
+        if err != nil {
+            return "", err
+        }
+
+        return tokenString, nil
+    }
+
+    return "", nil
 }
 
 func GetRSAPrivateKey(privateKeyString string) (*rsa.PrivateKey, error) {
@@ -99,4 +104,63 @@ func GetRSAPublicKey(publicKeyString string) (*rsa.PublicKey, error) {
 	}
 	
 	return key, nil
+}
+
+func generateKeyPair() (*rsa.PrivateKey, error) {
+    // Generate a new RSA key pair
+    privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+    if err != nil {
+        return nil, err
+    }
+
+    return privateKey, nil
+}
+
+func savePrivateKeyToPEM(privateKey *rsa.PrivateKey, filename string) error {
+    // Serialize the private key to PEM format
+    privateKeyPEM := &pem.Block{
+        Type:  "RSA PRIVATE KEY",
+        Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+    }
+
+    // Write the private key to a file
+    file, err := os.Create(filename)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    err = pem.Encode(file, privateKeyPEM)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func savePublicKeyToPEM(publicKey *rsa.PublicKey, filename string) error {
+    // Serialize the public key to PEM format
+    publicKeyBytes, err := x509.MarshalPKIXPublicKey(publicKey)
+    if err != nil {
+        return err
+    }
+
+    publicKeyPEM := &pem.Block{
+        Type:  "RSA PUBLIC KEY",
+        Bytes: publicKeyBytes,
+    }
+
+    // Write the public key to a file
+    file, err := os.Create(filename)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    err = pem.Encode(file, publicKeyPEM)
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
