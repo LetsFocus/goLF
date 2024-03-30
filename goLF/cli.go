@@ -30,13 +30,13 @@ type Command struct {
 	flags       *flag.FlagSet
 	flagValMap  map[string]*string
 	flagTypeMap map[string]string
-	Task        func(ctx Context) error
+	Task        func(ctx *Context) error
 }
 
 type CLI struct {
 	ToolName string
 	Version  string
+	golf     *GoLF
 	logger   *logger.CustomLogger
-	ctx      *Context
 	commands map[string]*Command
 }

@@ -7,20 +7,19 @@ import (
 	"strconv"
 
 	"time"
-
-	"github.com/LetsFocus/goLF/logger"
 )
 
-func NewCMD() *CLI {
+func NewCLI(golf *GoLF) *CLI {
 	commandMap := make(map[string]*Command)
-	logger := logger.NewCustomLogger()
-	return &CLI{commands: commandMap, logger: logger}
+	return &CLI{commands: commandMap, logger: golf.Logger, golf: golf}
 }
 
-func (cli *CLI) AddCommand(cmd Command) {
+func (cli *CLI) AddCommand(cmd *Command) {
 	flagValMap := make(map[string]*string)
-	cli.commands[cmd.Name] = &cmd
+	flagTypeMap := make(map[string]string)
+	cli.commands[cmd.Name] = cmd
 	cli.commands[cmd.Name].flagValMap = flagValMap
+	cli.commands[cmd.Name].flagTypeMap = flagTypeMap
 	cli.commands[cmd.Name].flags = flag.NewFlagSet(cmd.Name, flag.ExitOnError)
 }
 
@@ -35,22 +34,25 @@ func (cli *CLI) printUsage() {
 	}
 }
 
-func (golf *GoLF) Run() {
+func (cli *CLI) Run() {
+	var ctx Context
+	ctx.GoLF = cli.golf
+
 	if len(os.Args) <= 1 || os.Args[1] == "-h" {
-		golf.printUsage()
+		cli.printUsage()
 		os.Exit(1)
 	}
 
 	if os.Args[1] == "-v" || os.Args[1] == "--version" {
-		fmt.Printf("version: %s", golf.Version)
+		fmt.Printf("version: %s", cli.Version)
 		os.Exit(1)
 	}
 
 	cmdName := os.Args[1]
-	cmd, ok := golf.commands[cmdName]
+	cmd, ok := cli.commands[cmdName]
 	if ok {
 		if err := cmd.flags.Parse(os.Args[2:]); err != nil {
-			golf.logger.Errorf("Error parsing flags for command '%s': %v", cmd.Name, err)
+			cli.logger.Errorf("Error parsing flags for command '%s': %v", cmd.Name, err)
 			os.Exit(1)
 		}
 
@@ -62,53 +64,54 @@ func (golf *GoLF) Run() {
 				fmt.Println("String value:", flagValue)
 			case INT:
 				if _, err := strconv.Atoi(*flagValue); err != nil {
-					golf.logger.Errorf("Cannot convert to integer: %v", err)
+					cli.logger.Errorf("Cannot convert to integer: %v", err)
 					os.Exit(1)
 				}
 			case BOOL:
 				if _, err := strconv.ParseBool(*flagValue); err != nil {
-					golf.logger.Errorf("Cannot convert to bool: %v", err)
+					cli.logger.Errorf("Cannot convert to bool: %v", err)
 					os.Exit(1)
 				}
 			case INT64:
 				if _, err := strconv.ParseInt(*flagValue, 10, 64); err != nil {
-					golf.logger.Errorf("Cannot convert to int64: %v", err)
+					cli.logger.Errorf("Cannot convert to int64: %v", err)
 					os.Exit(1)
 				}
 			case UINT:
 				if _, err := strconv.ParseUint(*flagValue, 10, 0); err != nil {
-					golf.logger.Errorf("Cannot convert to uint: %v", err)
+					cli.logger.Errorf("Cannot convert to uint: %v", err)
 					os.Exit(1)
 				}
 			case UINT64:
 				if _, err := strconv.ParseUint(*flagValue, 10, 64); err != nil {
-					golf.logger.Errorf("Cannot convert to uint64: %v", err)
+					cli.logger.Errorf("Cannot convert to uint64: %v", err)
 					os.Exit(1)
 				}
 			case FLOAT64:
 				if _, err := strconv.ParseFloat(*flagValue, 64); err != nil {
-					golf.logger.Errorf("Cannot convert to float64: %v", err)
+					cli.logger.Errorf("Cannot convert to float64: %v", err)
 					os.Exit(1)
 				}
 			case DURATION:
 				if _, err := time.ParseDuration(*flagValue); err != nil {
-					golf.logger.Errorf("Cannot convert to duration: %v", err)
+					cli.logger.Errorf("Cannot convert to duration: %v", err)
 					os.Exit(1)
 				}
 			default:
-				golf.logger.Errorf("Unknown type: %s", flagType)
+				cli.logger.Errorf("Unknown type: %s", flagType)
 				os.Exit(1)
 			}
 			flagMap[flagName] = *flagValue
 		}
-		err := cmd.Task(golf.ctx)
+		ctx.Flags = flagMap
+		err := cmd.Task(&ctx)
 		if err != nil {
-			golf.logger.Errorf("Error executing command '%s': %v\n", cmd.Name, err)
+			cli.logger.Errorf("Error executing command '%s': %v\n", cmd.Name, err)
 		}
 		return
 	} else {
-		golf.logger.Errorf("Error: Unknown command '%s'\n", cmdName)
-		golf.printUsage()
+		cli.logger.Errorf("Error: Unknown command '%s'\n", cmdName)
+		cli.printUsage()
 		os.Exit(1)
 	}
 }

@@ -3,12 +3,11 @@ package goLF
 import (
 	"context"
 	"net/http"
-
 )
 
 type Context struct {
 	context.Context
-	GoLF GoLF
+	GoLF *GoLF
 	Requester
 	Response
 	Flags map[string]string
