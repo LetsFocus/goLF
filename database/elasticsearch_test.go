@@ -10,6 +10,7 @@ package database
 //
 //	"github.com/LetsFocus/goLF/configs"
 //	"github.com/LetsFocus/goLF/logger"
+//  "github.com/LetsFocus/goLF/goLF"
 //)
 //
 //func Test_establishESConnection(t *testing.T) {
@@ -39,10 +40,10 @@ package database
 //	t.Setenv("ES_PASSWORD", "")
 //
 //	testcases := []struct {
-//		input *model.GoLF
+//		input *goLF.GoLF
 //	}{
 //		{
-//			input: &model.GoLF{
+//			input: &goLF.GoLF{
 //				Config: configs.Config{Log: logger.NewCustomLogger()},
 //				Logger: logger.NewCustomLogger(),
 //			},
@@ -61,10 +62,10 @@ package database
 //	t.Setenv("ES_MONITORING", "TRUE")
 //
 //	testcases := []struct {
-//		input *model.GoLF
+//		input *goLF.GoLF
 //	}{
 //		{
-//			input: &model.GoLF{
+//			input: &goLF.GoLF{
 //				Config: configs.Config{Log: logger.NewCustomLogger()},
 //				Logger: logger.NewCustomLogger(),
 //			},
@@ -82,7 +83,7 @@ package database
 //
 //	testcases := []struct {
 //		desc      string
-//		input     *model.GoLF
+//		input     *goLF.GoLF
 //		esConfig  esConfig
 //		retry     int
 //		retryTime int
@@ -90,8 +91,8 @@ package database
 //	}{
 //		{
 //			desc: "successfully monitored the es",
-//			input: &model.GoLF{
-//				Database: model.Database{Elasticsearch: es1},
+//			input: &goLF.GoLF{
+//				Database: goLF.Database{Elasticsearch: es1},
 //				Config:   configs.Config{Log: logger.NewCustomLogger()},
 //				Logger:   logger.NewCustomLogger(),
 //			},
@@ -101,8 +102,8 @@ package database
 //
 //		{
 //			desc: "retry is less than retryCount",
-//			input: &model.GoLF{
-//				Database: model.Database{Elasticsearch: es2},
+//			input: &goLF.GoLF{
+//				Database: goLF.Database{Elasticsearch: es2},
 //				Config:   configs.Config{Log: logger.NewCustomLogger()},
 //				Logger:   logger.NewCustomLogger(),
 //			},
