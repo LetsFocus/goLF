@@ -1,4 +1,4 @@
-package model
+package goLF
 
 import (
 	"github.com/LetsFocus/goLF/cmd"

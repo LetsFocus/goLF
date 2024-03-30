@@ -9,7 +9,6 @@ package database
 //	"github.com/stretchr/testify/assert"
 //
 //	"github.com/LetsFocus/goLF/configs"
-//	"github.com/LetsFocus/goLF/goLF/model"
 //	"github.com/LetsFocus/goLF/logger"
 //)
 //

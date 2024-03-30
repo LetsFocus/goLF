@@ -3,13 +3,12 @@ package goLF
 import (
 	"github.com/LetsFocus/goLF/cmd"
 	"github.com/LetsFocus/goLF/configs"
-	"github.com/LetsFocus/goLF/goLF/model"
 	"github.com/LetsFocus/goLF/logger"
 	"github.com/LetsFocus/goLF/metrics"
 )
 
-func New() model.GoLF {
-	var goLF model.GoLF
+func New() GoLF {
+	var goLF GoLF
 
 	goLF.Logger = logger.NewCustomLogger()
 	goLF.Config = configs.NewConfig(goLF.Logger)
@@ -21,8 +20,8 @@ func New() model.GoLF {
 	return goLF
 }
 
-func NewCMD() model.GoLF {
-	var goLF model.GoLF
+func NewCMD() GoLF {
+	var goLF GoLF
 
 	goLF.Logger = logger.NewCustomLogger()
 	goLF.Config = configs.NewConfig(goLF.Logger)
