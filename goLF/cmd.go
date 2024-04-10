@@ -59,6 +59,10 @@ func (cli *CLI) Run() {
 		flagMap := make(map[string]string)
 		for flagName, flagValue := range cmd.flagValMap {
 			flagType := cmd.flagTypeMap[flagName]
+			if *flagValue=="no-default" {
+				cli.logger.Errorf("No value provided for: %s", flagName)
+				os.Exit(1)
+			}
 			switch flagType {
 			case STRING:
 				fmt.Println("String value:", flagValue)
@@ -126,28 +130,6 @@ func (cli *CLI) AddFlags(command string, cmdFlags []Flags) {
 
 	for _, value := range cmdFlags {
 		cli.commands[command].flagTypeMap[value.Name] = value.Type
-		if value.Default == "" {
-			switch value.Type {
-			case STRING:
-				value.Default = ""
-			case INT:
-				value.Default = "0"
-			case BOOL:
-				value.Default = "false"
-			case INT64:
-				value.Default = "0"
-			case UINT:
-				value.Default = "0"
-			case UINT64:
-				value.Default = "0"
-			case FLOAT64:
-				value.Default = "0.0"
-			case DURATION:
-				value.Default = "0"
-			default:
-				value.Default = ""
-			}
-		}
 		cli.commands[command].flagValMap[value.Name] = cli.commands[command].flags.String(value.Name, value.Default, value.Help)
 	}
 }
