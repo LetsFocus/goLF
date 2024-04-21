@@ -7,10 +7,9 @@ import (
 
 	"github.com/LetsFocus/goLF/configs"
 	"github.com/LetsFocus/goLF/database"
-	"github.com/LetsFocus/goLF/goLF/model"
 )
 
-func initializeDatabases(g *model.GoLF) {
+func initializeDatabases(g *GoLF) {
 	InitializeSQL(g, "")
 	InitializeRedis(g, "")
 	InitializeCassandra(g, "")
@@ -23,9 +22,9 @@ type DBConfig interface {
 	GetDBName() string
 }
 
-type RetryFunc func(g *model.GoLF, c DBConfig) (database.HealthCheck, error)
+type RetryFunc func(g *GoLF, c DBConfig) (database.HealthCheck, error)
 
-func initializeDatabase(g *model.GoLF, config DBConfig, retry RetryFunc) {
+func initializeDatabase(g *GoLF, config DBConfig, retry RetryFunc) {
 	if config == nil {
 		g.Logger.Errorf("Configs are invalid")
 		return
@@ -44,12 +43,12 @@ func initializeDatabase(g *model.GoLF, config DBConfig, retry RetryFunc) {
 	go Monitoring(g, config, retry, healthcheck)
 }
 
-func InitializeSQL(g *model.GoLF, prefix string) {
+func InitializeSQL(g *GoLF, prefix string) {
 	c := getSqlConfigs(g.Config, prefix)
 	initializeDatabase(g, c, getSQLConnection)
 }
 
-func getSQLConnection(g *model.GoLF, c DBConfig) (healthcheck database.HealthCheck, err error) {
+func getSQLConnection(g *GoLF, c DBConfig) (healthcheck database.HealthCheck, err error) {
 	dbConfig, _ := c.(database.DBConfig)
 
 	db, err := database.InitializeDB(g.Logger, &dbConfig)
@@ -62,7 +61,7 @@ func getSQLConnection(g *model.GoLF, c DBConfig) (healthcheck database.HealthChe
 	return
 }
 
-func getESConnection(g *model.GoLF, c DBConfig) (healthcheck database.HealthCheck, err error) {
+func getESConnection(g *GoLF, c DBConfig) (healthcheck database.HealthCheck, err error) {
 	dbConfig, _ := c.(database.ESConfig)
 
 	es, err := database.InitializeES(g.Logger, &dbConfig)
@@ -75,7 +74,7 @@ func getESConnection(g *model.GoLF, c DBConfig) (healthcheck database.HealthChec
 	return
 }
 
-func getRedisConnection(g *model.GoLF, c DBConfig) (healthcheck database.HealthCheck, err error) {
+func getRedisConnection(g *GoLF, c DBConfig) (healthcheck database.HealthCheck, err error) {
 	dbConfig, _ := c.(database.RedisConfig)
 
 	redis, err := database.InitializeRedis(g.Logger, &dbConfig)
@@ -88,7 +87,7 @@ func getRedisConnection(g *model.GoLF, c DBConfig) (healthcheck database.HealthC
 	return
 }
 
-func getCassandraConnection(g *model.GoLF, c DBConfig) (healthcheck database.HealthCheck, err error) {
+func getCassandraConnection(g *GoLF, c DBConfig) (healthcheck database.HealthCheck, err error) {
 	dbConfig, _ := c.(database.CassandraConfig)
 
 	redis, err := database.InitializeCassandra(g.Logger, &dbConfig)
@@ -101,7 +100,7 @@ func getCassandraConnection(g *model.GoLF, c DBConfig) (healthcheck database.Hea
 	return
 }
 
-func Monitoring(g *model.GoLF, c DBConfig, retry RetryFunc, healthcheck database.HealthCheck) {
+func Monitoring(g *GoLF, c DBConfig, retry RetryFunc, healthcheck database.HealthCheck) {
 	ticker := time.NewTicker(time.Second)
 
 	var (
@@ -136,17 +135,17 @@ monitoringLoop:
 	g.Logger.Errorf("%v monitoring stopped after reaching maximum retries. Error for %v breakdown is %v", err)
 }
 
-func InitializeElasticSearch(g *model.GoLF, prefix string) {
+func InitializeElasticSearch(g *GoLF, prefix string) {
 	c := getESConfigs(g.Config, prefix)
 	initializeDatabase(g, c, getESConnection)
 }
 
-func InitializeRedis(g *model.GoLF, prefix string) {
+func InitializeRedis(g *GoLF, prefix string) {
 	c := getRedisConfigs(g.Config, prefix)
 	initializeDatabase(g, c, getRedisConnection)
 }
 
-func InitializeCassandra(g *model.GoLF, prefix string) {
+func InitializeCassandra(g *GoLF, prefix string) {
 	c := getCassandraConfigs(g.Config, prefix)
 	initializeDatabase(g, c, getRedisConnection)
 }

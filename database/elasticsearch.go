@@ -1,10 +1,11 @@
 package database
 
 import (
-	"github.com/LetsFocus/goLF/types"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/LetsFocus/goLF/types"
 
 	"github.com/elastic/go-elasticsearch/v8"
 
@@ -37,7 +38,7 @@ func (e ESConfig) GetMaxRetryDuration() int {
 	return e.RetryDuration
 }
 
-func InitializeES(log *logger.CustomLogger, c *ESConfig) (Es, error) {
+func InitializeES (log *logger.CustomLogger, c *ESConfig) (Es, error) {
 	transport := &http.Transport{
 		MaxIdleConns:    c.MaxIdleConns,
 		MaxConnsPerHost: c.MaxOpenConns,
@@ -50,7 +51,7 @@ func InitializeES(log *logger.CustomLogger, c *ESConfig) (Es, error) {
 		Password:  c.Password,
 		Transport: transport,
 	}
-
+	
 	esClient, err := elasticsearch.NewClient(cfg)
 	if err != nil {
 		log.Errorf("Failed to initialize the Elasticsearch client, Error:%v", err)

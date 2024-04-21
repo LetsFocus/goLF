@@ -1,7 +1,6 @@
-package model
+package goLF
 
 import (
-	"github.com/LetsFocus/goLF/cmd"
 	"github.com/LetsFocus/goLF/configs"
 	"github.com/LetsFocus/goLF/database"
 	"github.com/LetsFocus/goLF/logger"
@@ -13,5 +12,5 @@ type GoLF struct {
 	Config  configs.Config
 	Logger  *logger.CustomLogger
 	Metrics *metrics.Metrics
-	*cmd.CLI
+	*CLI
 }
