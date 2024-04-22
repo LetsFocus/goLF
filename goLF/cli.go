@@ -1,35 +1,19 @@
 package goLF
 
 import (
-	"flag"
-
 	"github.com/LetsFocus/goLF/logger"
 )
 
-const (
-	STRING   = "string"
-	INT      = "int"
-	BOOL     = "bool"
-	INT64    = "int64"
-	UINT     = "uint"
-	UINT64   = "uint64"
-	FLOAT64  = "float64"
-	DURATION = "duration"
-)
-
 type Flags struct {
-	Name    string
-	Type    string
-	Default string
-	Help    string
+	Name string
+	Help string
 }
 
 type Command struct {
 	Name        string
 	Description string
-	flags       *flag.FlagSet
-	flagValMap  map[string]*string
-	flagTypeMap map[string]string
+	flagValMap  map[string]string
+	flagHelpMap map[string]string
 	Task        func(ctx *Context) error
 }
 

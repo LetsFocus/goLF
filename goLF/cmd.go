@@ -1,12 +1,9 @@
 package goLF
 
 import (
-	"flag"
 	"fmt"
 	"os"
-	"strconv"
-
-	"time"
+	"strings"
 )
 
 func NewCLI(golf *GoLF) *CLI {
@@ -15,12 +12,11 @@ func NewCLI(golf *GoLF) *CLI {
 }
 
 func (cli *CLI) AddCommand(cmd *Command) {
-	flagValMap := make(map[string]*string)
-	flagTypeMap := make(map[string]string)
+	flagValMap := make(map[string]string)
+	flagHelpMap := make(map[string]string)
 	cli.commands[cmd.Name] = cmd
 	cli.commands[cmd.Name].flagValMap = flagValMap
-	cli.commands[cmd.Name].flagTypeMap = flagTypeMap
-	cli.commands[cmd.Name].flags = flag.NewFlagSet(cmd.Name, flag.ExitOnError)
+	cli.commands[cmd.Name].flagHelpMap = flagHelpMap
 }
 
 func (cli *CLI) printUsage() {
@@ -30,8 +26,30 @@ func (cli *CLI) printUsage() {
 		fmt.Printf("What is my command: %s\n", cmd.Name)
 		fmt.Printf("What I do: %s\n", cmd.Description)
 		fmt.Println("What I accept:")
-		cmd.flags.PrintDefaults()
+		for paramName := range cmd.flagValMap{
+			fmt.Printf("	%s - %s\n", paramName, cmd.flagHelpMap[paramName])
+		}
+
 	}
+}
+
+func (cli *CLI) parseCommand(commands []string) (string, map[string]string) {
+	commandName := commands[1]
+	parameters := make(map[string]string)
+
+	if len(commands)>=2 {
+		for _, command := range commands[2:] {
+			paramParts := strings.SplitN(command, "=", 2)
+			if len(paramParts) != 2 {
+				fmt.Printf("Invalid parameter format: %s\n", command)
+				continue
+			}
+			paramName := strings.TrimLeft(paramParts[0], "-")
+			parameters[paramName] = paramParts[1]
+		}
+	}
+
+	return commandName, parameters
 }
 
 func (cli *CLI) Run() {
@@ -48,73 +66,22 @@ func (cli *CLI) Run() {
 		os.Exit(1)
 	}
 
-	cmdName := os.Args[1]
-	cmd, ok := cli.commands[cmdName]
+	commandName, parameters := cli.parseCommand(os.Args)
+	cmd, ok := cli.commands[commandName]
 	if ok {
-		if err := cmd.flags.Parse(os.Args[2:]); err != nil {
-			cli.logger.Errorf("Error parsing flags for command '%s': %v", cmd.Name, err)
-			os.Exit(1)
-		}
-
-		flagMap := make(map[string]string)
-		for flagName, flagValue := range cmd.flagValMap {
-			flagType := cmd.flagTypeMap[flagName]
-			if *flagValue=="no-default" {
-				cli.logger.Errorf("No value provided for: %s", flagName)
-				os.Exit(1)
+		for paramName := range cmd.flagValMap {
+			if _, ok := parameters[paramName]; ok {
+				cmd.flagValMap[paramName] = parameters[paramName]
 			}
-			switch flagType {
-			case STRING:
-				fmt.Println("String value:", flagValue)
-			case INT:
-				if _, err := strconv.Atoi(*flagValue); err != nil {
-					cli.logger.Errorf("Cannot convert to integer: %v", err)
-					os.Exit(1)
-				}
-			case BOOL:
-				if _, err := strconv.ParseBool(*flagValue); err != nil {
-					cli.logger.Errorf("Cannot convert to bool: %v", err)
-					os.Exit(1)
-				}
-			case INT64:
-				if _, err := strconv.ParseInt(*flagValue, 10, 64); err != nil {
-					cli.logger.Errorf("Cannot convert to int64: %v", err)
-					os.Exit(1)
-				}
-			case UINT:
-				if _, err := strconv.ParseUint(*flagValue, 10, 0); err != nil {
-					cli.logger.Errorf("Cannot convert to uint: %v", err)
-					os.Exit(1)
-				}
-			case UINT64:
-				if _, err := strconv.ParseUint(*flagValue, 10, 64); err != nil {
-					cli.logger.Errorf("Cannot convert to uint64: %v", err)
-					os.Exit(1)
-				}
-			case FLOAT64:
-				if _, err := strconv.ParseFloat(*flagValue, 64); err != nil {
-					cli.logger.Errorf("Cannot convert to float64: %v", err)
-					os.Exit(1)
-				}
-			case DURATION:
-				if _, err := time.ParseDuration(*flagValue); err != nil {
-					cli.logger.Errorf("Cannot convert to duration: %v", err)
-					os.Exit(1)
-				}
-			default:
-				cli.logger.Errorf("Unknown type: %s", flagType)
-				os.Exit(1)
-			}
-			flagMap[flagName] = *flagValue
 		}
-		ctx.Flags = flagMap
+		ctx.Flags = cmd.flagValMap
 		err := cmd.Task(&ctx)
 		if err != nil {
 			cli.logger.Errorf("Error executing command '%s': %v\n", cmd.Name, err)
 		}
 		return
 	} else {
-		cli.logger.Errorf("Error: Unknown command '%s'\n", cmdName)
+		cli.logger.Errorf("Error: Unknown command '%s'\n", commandName)
 		cli.printUsage()
 		os.Exit(1)
 	}
@@ -129,7 +96,7 @@ func (cli *CLI) AddFlags(command string, cmdFlags []Flags) {
 	}
 
 	for _, value := range cmdFlags {
-		cli.commands[command].flagTypeMap[value.Name] = value.Type
-		cli.commands[command].flagValMap[value.Name] = cli.commands[command].flags.String(value.Name, value.Default, value.Help)
+		cli.commands[command].flagValMap[value.Name] = ""
+		cli.commands[command].flagHelpMap[value.Name] = value.Help
 	}
 }
