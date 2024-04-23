@@ -10,7 +10,7 @@ type Context struct {
 	GoLF *GoLF
 	Requester
 	Response
-	Flags map[string]string
+	Flags map[string]*string
 }
 
 type Handler func(ctx *Context)

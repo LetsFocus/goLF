@@ -12,7 +12,7 @@ type Flags struct {
 type Command struct {
 	Name        string
 	Description string
-	flagValMap  map[string]string
+	flagValMap  map[string]*string
 	flagHelpMap map[string]string
 	Task        func(ctx *Context) error
 }

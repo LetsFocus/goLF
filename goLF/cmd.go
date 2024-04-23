@@ -12,7 +12,7 @@ func NewCLI(golf *GoLF) *CLI {
 }
 
 func (cli *CLI) AddCommand(cmd *Command) {
-	flagValMap := make(map[string]string)
+	flagValMap := make(map[string]*string)
 	flagHelpMap := make(map[string]string)
 	cli.commands[cmd.Name] = cmd
 	cli.commands[cmd.Name].flagValMap = flagValMap
@@ -71,7 +71,8 @@ func (cli *CLI) Run() {
 	if ok {
 		for paramName := range cmd.flagValMap {
 			if _, ok := parameters[paramName]; ok {
-				cmd.flagValMap[paramName] = parameters[paramName]
+				value := parameters[paramName]
+				cmd.flagValMap[paramName] = &value
 			}
 		}
 		ctx.Flags = cmd.flagValMap
@@ -96,7 +97,7 @@ func (cli *CLI) AddFlags(command string, cmdFlags []Flags) {
 	}
 
 	for _, value := range cmdFlags {
-		cli.commands[command].flagValMap[value.Name] = ""
+		cli.commands[command].flagValMap[value.Name] = nil
 		cli.commands[command].flagHelpMap[value.Name] = value.Help
 	}
 }
