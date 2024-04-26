@@ -1,5 +1,10 @@
 package errors
 
+import (
+	"fmt"
+	"strings"
+)
+
 // EnumError represents a 400 Bad Request error indicating an invalid enumeration value.
 type EnumError struct {
 	SupportedValues []string

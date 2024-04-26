@@ -1,5 +1,9 @@
 package errors
 
+import (
+	"fmt"
+	"strings"
+)
 
 // MissingHeader represents a 400 Bad Request error indicating a missing header.
 type MissingHeader struct {

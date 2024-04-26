@@ -1,12 +1,14 @@
 package errors
 
-// ServiceCallError represents a 500 Internal Server Error indicating an error in a service call.
-type ServiceCallError struct {
+import "fmt"
+
+// ServiceCall represents a 500 Internal Server Error indicating an error in a service call.
+type ServiceCall struct {
 	Service string
 	Err     error
 }
 
-func (e *ServiceCallError) Error() string {
+func (e *ServiceCall) Error() string {
 	return fmt.Sprintf("Error while calling %s service, Error: %v", e.Service, e.Err.Error())
 }
 

@@ -1,9 +1,9 @@
 package errors
 
 // DBError represents a 500 Internal Server Error indicating a database error.
-type DBError struct{}
+type DB struct{}
 
-func (e *DBError) Error() string {
+func (e *DB) Error() string {
 	return "Database error"
 }
 

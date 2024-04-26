@@ -1,5 +1,9 @@
 package errors
 
+import (
+	"fmt"
+	"strings"
+)
 
 // InvalidParam represents a 400 Bad Request error indicating an invalid parameter.
 type InvalidParam struct {
