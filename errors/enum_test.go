@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEnumError_Error(t *testing.T) {
@@ -11,7 +13,5 @@ func TestEnumError_Error(t *testing.T) {
 	value := "D"
 	err := &EnumError{SupportedValues: supportedValues, Value: value}
 	expected := fmt.Sprintf("Value of the field %s must be one of [%s]", value, strings.Join(supportedValues, ", "))
-	if err.Error() != expected {
-		t.Errorf("Expected error message '%s', got '%s'", expected, err.Error())
-	}
+	assert.Equal(t, expected, err.Error(), "Expected error message '%s', got '%s'", expected, err.Error())
 }

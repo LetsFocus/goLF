@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestServiceCall_Error(t *testing.T) {
@@ -11,16 +13,12 @@ func TestServiceCall_Error(t *testing.T) {
 	errMsg := "example error"
 	err := &ServiceCall{Service: service, Err: errors.New(errMsg)}
 	expected := fmt.Sprintf("Error while calling %s service, Error: %s", service, errMsg)
-	if err.Error() != expected {
-		t.Errorf("Expected error message '%s', got '%s'", expected, err.Error())
-	}
+	assert.Equal(t, expected, err.Error(), "Expected error message '%s', got '%s'", expected, err.Error())
 }
 
 func TestServiceUnavailable_Error(t *testing.T) {
 	service := "exampleService"
 	err := &ServiceUnavailable{Service: service}
 	expected := fmt.Sprintf("Service '%s' is unavailable", service)
-	if err.Error() != expected {
-		t.Errorf("Expected error message '%s', got '%s'", expected, err.Error())
-	}
+	assert.Equal(t, expected, err.Error(), "Expected error message '%s', got '%s'", expected, err.Error())
 }

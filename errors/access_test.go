@@ -1,19 +1,19 @@
 package errors
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestUnauthorized_Error(t *testing.T) {
 	err := &Unauthorized{}
 	expected := "Unauthorized: access denied"
-	if err.Error() != expected {
-		t.Errorf("Expected error message '%s', got '%s'", expected, err.Error())
-	}
+	assert.Equal(t, expected, err.Error(), "Expected error message '%s', got '%s'", expected, err.Error())
 }
 
 func TestForbidden_Error(t *testing.T) {
 	err := &Forbidden{}
 	expected := "Forbidden: access forbidden"
-	if err.Error() != expected {
-		t.Errorf("Expected error message '%s', got '%s'", expected, err.Error())
-	}
+	assert.Equal(t, expected, err.Error(), "Expected error message '%s', got '%s'", expected, err.Error())
 }

@@ -1,6 +1,6 @@
 package errors
 
-// DBError represents a 500 Internal Server Error indicating a database error.
+// DB represents a 500 Internal Server Error indicating a database error.
 type DB struct{}
 
 func (e *DB) Error() string {
