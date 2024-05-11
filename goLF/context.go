@@ -2,6 +2,7 @@ package goLF
 
 import (
 	"context"
+	"errors"
 	"net/http"
 )
 
@@ -47,4 +48,19 @@ func (c *Context) GetParams() map[string]string {
 
 func (c *Context) GetParamsArray() map[string][]string {
 	return c.Requester.GetParamsArray()
+}
+
+// function to get all pairs of flag and values
+func (c *Context) GetALLFlags() map[string]string {
+	return c.Flags
+}
+
+// function to get value corresponding to a flag
+func (c *Context) GetFlag(flagname string) (string, error) {
+	value, exists := c.Flags[flagname]
+	if exists {
+		return value, nil
+	} else {
+		return "", errors.New("flag not found")
+	}
 }

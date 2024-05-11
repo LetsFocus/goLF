@@ -6,11 +6,13 @@ import (
 	"strings"
 )
 
+// function to initialize a new CLI tool
 func NewCLI(golf *GoLF) *CLI {
 	commandMap := make(map[string]*Command)
 	return &CLI{commands: commandMap, logger: golf.Logger, golf: golf}
 }
 
+// function to add commands to the CLI
 func (cli *CLI) AddCommand(cmd *Command) {
 	flagValMap := make(map[string]string)
 	flagHelpMap := make(map[string]string)
@@ -33,6 +35,7 @@ func (cli *CLI) printUsage() {
 	}
 }
 
+// function to parse the values corresponding to the flags
 func (cli *CLI) parseCommand(commands []string) (string, map[string]string) {
 	commandName := commands[1]
 	parameters := make(map[string]string)
@@ -52,6 +55,7 @@ func (cli *CLI) parseCommand(commands []string) (string, map[string]string) {
 	return commandName, parameters
 }
 
+// function to run the command line tool
 func (cli *CLI) Run() {
 	var ctx Context
 	ctx.GoLF = cli.golf
@@ -83,13 +87,13 @@ func (cli *CLI) Run() {
 			cli.logger.Errorf("Error executing command '%s': %v\n", cmd.Name, err)
 		}
 		return
-	} else {
-		cli.logger.Errorf("Error: Unknown command '%s'\n", commandName)
-		cli.printUsage()
-		os.Exit(1)
 	}
+	cli.logger.Errorf("Error: Unknown command '%s'\n", commandName)
+	cli.printUsage()
+	os.Exit(1)
 }
 
+// function to add flags to a command
 func (cli *CLI) AddFlags(command string, cmdFlags []Flags) {
 	_, ok := cli.commands[command]
 	if !ok {
