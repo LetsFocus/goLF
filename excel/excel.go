@@ -2,17 +2,25 @@ package excel
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"errors"
 	"os"
+	"strconv"
 )
 
-type Excel struct {
-	filePath   string
-	configPath string
+type Header struct {
+	headers []string
+	excel   *Excel
 }
 
-func NewExcel(filePath string, configPath string) (*Excel, error) {
+type Excel struct {
+	filePath      string
+	primaryKey    string
+	isHeaderExist bool
+	headersMap    map[string]int
+	header        *Header
+}
+
+func InitExcel(filePath string, primaryKey string, isHeaderExist bool) (*Excel, error) {
 	_, err := os.Stat(filePath)
 	if os.IsNotExist(err) {
 		_, err := os.Create(filePath)
@@ -20,35 +28,12 @@ func NewExcel(filePath string, configPath string) (*Excel, error) {
 			return nil, err
 		}
 	}
-
-	_, err = os.Stat(configPath)
-	if os.IsNotExist(err) {
-		_, err := os.Create(configPath)
-		if err != nil {
-			return nil, err
-		}
+	if primaryKey == "auto" {
+		primaryKey = "auto_id"
 	}
 
-	file, err := os.Create(configPath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	configData := map[string]interface{}{
-		"primaryKey":  "",
-		"headers":     nil,
-		"primaryKeys": nil,
-		"autoId":      1,
-	}
-
-	encoder := json.NewEncoder(file)
-	err = encoder.Encode(configData)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Excel{filePath: filePath, configPath: configPath}, nil
+	return &Excel{filePath: filePath, primaryKey: primaryKey,
+		isHeaderExist: isHeaderExist, headersMap: nil, header: nil}, nil
 }
 
 func (e *Excel) GetAllRows() ([][]string, error) {
@@ -66,255 +51,338 @@ func (e *Excel) GetAllRows() ([][]string, error) {
 	return rows, nil
 }
 
-func (e *Excel) AddHeader(primaryKey string, headers []string) error {
-	configFile, err := os.Open(e.configPath)
-	if err != nil {
-		return err
+func (e *Excel) buildHeaderMap(headers []string) map[string]int {
+	headersMap := make(map[string]int)
+	if e.primaryKey == "auto_id" {
+		headersMap[e.primaryKey] = 0
+		for index, field := range headers {
+			headersMap[field] = index + 1
+		}
+	} else {
+		for index, field := range headers {
+			headersMap[field] = index
+		}
 	}
-	defer configFile.Close()
+	return headersMap
+}
 
-	var configData map[string]interface{}
-	decoder := json.NewDecoder(configFile)
-	err = decoder.Decode(&configData)
-	if err != nil {
-		return err
-	}
-
+func (e *Excel) AddHeader(headers []string) error {
 	excelFile, err := os.Open(e.filePath)
 	if err != nil {
 		return err
 	}
 	defer excelFile.Close()
 
-	if value, ok := configData["headers"]; ok {
-		_, ok := value.(map[string]int)
-		if !ok {
-			return errors.New("header already present")
-		}
-	} else {
-		return errors.New("headers not found in config")
+	if e.isHeaderExist {
+		return errors.New("header already present")
 	}
 
-	configData["primaryKey"] = primaryKey
-	headersMap := make(map[string]int)
-	headersMap[primaryKey] = 0
-	for index, field := range headers {
-		headersMap[field] = index + 1
-	}
-	configData["headers"] = headersMap
+	e.headersMap = e.buildHeaderMap(headers)
 
 	rows, err := e.GetAllRows()
 	if err != nil {
 		return err
 	}
 
-	configFileWrite, err := os.Create(e.configPath)
+	file, err := os.Create(e.filePath)
 	if err != nil {
 		return err
 	}
-	defer configFileWrite.Close()
+	defer file.Close()
 
-	excelFileWrite, err := os.Create(e.configPath)
-	if err != nil {
-		return err
+	if e.primaryKey == "auto_id" {
+		headers = append([]string{e.primaryKey}, headers...)
 	}
-	defer excelFileWrite.Close()
-
-	headers = append([]string{primaryKey}, headers...)
 	rows = append([][]string{headers}, rows...)
-	writer := csv.NewWriter(excelFileWrite)
+	writer := csv.NewWriter(file)
 	err = writer.WriteAll(rows)
 	if err != nil {
 		return err
 	}
+	e.isHeaderExist = true
+	return nil
+}
 
-	encoder := json.NewEncoder(configFileWrite)
-	err = encoder.Encode(configData)
+func (e *Excel) ReplaceHeaderName(headers map[string]string) error {
+	excelFile, err := os.Open(e.filePath)
+	if err != nil {
+		return err
+	}
+	defer excelFile.Close()
+
+	rows, err := e.GetAllRows()
+	if err != nil {
+		return err
+	}
+	e.headersMap = e.buildHeaderMap(rows[0])
+
+	if !e.isHeaderExist {
+		return errors.New("header not present")
+	}
+
+	newHeaders := make([]string, len(e.headersMap))
+	if e.primaryKey == "auto_id" {
+		newHeaders[0] = "auto_id"
+	}
+	for key, value := range headers {
+		if key == e.primaryKey {
+			e.primaryKey = value
+		}
+		val, ok := e.headersMap[key]
+		if !ok {
+			return errors.New("header doesn't exist")
+		}
+		delete(e.headersMap, key)
+		e.headersMap[value] = val
+		newHeaders[val] = value
+	}
+
+	file, err := os.Create(e.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	rows[0] = newHeaders
+	writer := csv.NewWriter(file)
+	err = writer.WriteAll(rows)
+	if err != nil {
+		return err
+	}
+	e.isHeaderExist = true
+	return nil
+}
+
+func (e *Excel) AddRow(row []string) error {
+	rows, err := e.GetAllRows()
+	if err != nil {
+		return err
+	}
+
+	if e.primaryKey == "auto_id" {
+		totalRows := len(rows)
+		currentId := 0
+		if e.isHeaderExist {
+			currentId = totalRows - 1
+		} else {
+			currentId = totalRows
+		}
+		row = append([]string{strconv.Itoa(currentId)}, row...)
+	}
+	rows = append(rows, row)
+
+	file, err := os.Create(e.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	err = writer.WriteAll(rows)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// func (e *Excel) AddRow(row []string) error {
-// 	if e.primaryKey == "auto" {
-// 		row = append([]string{strconv.Itoa(e.autoId)}, row...)
-// 		e.autoId = e.autoId + 1
-// 	} else {
+func (h *Header) AddRow(row []string) error {
+	rows, err := h.excel.GetAllRows()
+	if err != nil {
+		return err
+	}
 
-// 	}
-// 	file, err := os.OpenFile(e.filePath, os.O_WRONLY|os.O_APPEND, 0644)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer file.Close()
+	if h.excel.primaryKey == "auto_id" {
+		rowToAdd := make([]string, len(row))
+		totalRows := len(rows)
+		currentId := 0
+		if h.excel.isHeaderExist {
+			currentId = totalRows - 1
+		} else {
+			currentId = totalRows
+		}
+		for i:=0; i<len(h.headers); i++ {
+			rowToAdd[h.excel.headersMap[h.headers[i]]-1] =  row[i]
+		}
+		row = append([]string{strconv.Itoa(currentId)}, rowToAdd...)
+	} else{
+		rowToAdd := make([]string, len(row))
+		for i:=0; i<len(h.headers); i++ {
+			rowToAdd[h.excel.headersMap[h.headers[i]]] =  row[i]
+		}
+		row = rowToAdd
+	}
+	rows = append(rows, row)
 
-// 	writer := csv.NewWriter(file)
-// 	defer writer.Flush()
-// 	err = writer.Write(row)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+	file, err := os.Create(h.excel.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 
-// func (e *Excel) GetRow(id string) ([]string, error) {
-// 	file, err := os.Open(e.filePath)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer file.Close()
+	writer := csv.NewWriter(file)
+	err = writer.WriteAll(rows)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-// 	rowNum, err := e.GetRowFromId(id)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if rowNum == -1 {
-// 		return nil, errors.New("an error occured")
-// 	}
+func (e *Excel) Columns(headers []string) *Header {
+	e.header.headers = headers
+	e.header.excel = e
+	return e.header
+}
 
-// 	reader := csv.NewReader(file)
-// 	rows, err := reader.ReadAll()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (e *Excel) getRowNumFromId(primaryKey string) (int, error) {
+	file, err := os.Open(e.filePath)
+	if err != nil {
+		return -1, err
+	}
+	defer file.Close()
 
-// 	if rowNum >= len(rows) {
-// 		return nil, errors.New("row number out of range")
-// 	}
+	reader := csv.NewReader(file)
+	rows, err := reader.ReadAll()
+	if err != nil {
+		return -1, err
+	}
 
-// 	return rows[rowNum], nil
-// }
+	if len(rows) <= 0 {
+		return -1, errors.New("ID not available")
+	}
 
-// func (e *Excel) GetLastId() (int, error) {
-// 	file, err := os.Open(e.filePath)
-// 	if err != nil {
-// 		return -1, err
-// 	}
-// 	defer file.Close()
+	primaryKeyPosition := e.headersMap[e.primaryKey]
+	for index, row := range rows {
+		if primaryKeyPosition < len(row) && row[primaryKeyPosition] == primaryKey {
+			return index, nil
+		}
+	}
+	return -1, nil
+}
 
-// 	reader := csv.NewReader(file)
-// 	rows, err := reader.ReadAll()
-// 	if err != nil {
-// 		return -1, err
-// 	}
+func (e *Excel) GetRow(primaryKey string) ([]string, error) {
+	file, err := os.Open(e.filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
 
-// 	if len(rows) <= 0 || len(rows[len(rows)-1]) <= 0 {
-// 		return 1, nil
-// 	}
-// 	if rows[len(rows)-1][0] == "id" {
-// 		return 1, nil
-// 	}
-// 	id, err := strconv.Atoi(rows[len(rows)-1][0])
-// 	if err != nil {
-// 		return -1, err
-// 	}
-// 	return id + 1, nil
-// }
+	rowNumber, err := e.getRowNumFromId(primaryKey)
+	if err != nil {
+		return nil, err
+	}
+	if rowNumber == -1 {
+		return nil, errors.New("an error occured")
+	}
 
-// func (e *Excel) GetRowFromId(id string) (int, error) {
-// 	file, err := os.Open(e.filePath)
-// 	if err != nil {
-// 		return -1, err
-// 	}
-// 	defer file.Close()
+	reader := csv.NewReader(file)
+	rows, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
 
-// 	reader := csv.NewReader(file)
-// 	rows, err := reader.ReadAll()
-// 	if err != nil {
-// 		return -1, err
-// 	}
+	if rowNumber >= len(rows) {
+		return nil, errors.New("row number out of range")
+	}
 
-// 	if len(rows) <= 0 {
-// 		return -1, errors.New("ID not available")
-// 	}
+	return rows[rowNumber], nil
+}
 
-// 	for index, row := range rows {
-// 		if len(row) > 0 && row[0] == id {
-// 			return index, nil
-// 		}
-// 	}
-// 	return -1, nil
-// }
+func (e *Excel) ReplaceRow(primaryKey string, row []string) error {
+	file, err := os.Open(e.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 
-// func (e *Excel) ReplaceRow(id string, row []string) error {
-// 	file, err := os.Open(e.filePath)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer file.Close()
+	rowNumber, err := e.getRowNumFromId(primaryKey)
+	if err != nil {
+		return err
+	}
+	if rowNumber == -1 {
+		return errors.New("an error occured")
+	}
 
-// 	row = append([]string{id}, row...)
-// 	rowNum, err := e.GetRowFromId(id)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if rowNum == -1 {
-// 		return errors.New("an error occured")
-// 	}
+	reader := csv.NewReader(file)
+	allRows, err := reader.ReadAll()
+	if err != nil {
+		return err
+	}
 
-// 	reader := csv.NewReader(file)
-// 	allRows, err := reader.ReadAll()
-// 	if err != nil {
-// 		return err
-// 	}
+	if rowNumber < 0 || rowNumber >= len(allRows) {
+		return errors.New("row number out of range")
+	}
 
-// 	if rowNum < 0 || rowNum >= len(allRows) {
-// 		return errors.New("row number out of range")
-// 	}
+	if e.primaryKey == "auto_id" {
+		row = append([]string{primaryKey}, row...)
+	}
 
-// 	allRows[rowNum] = row
+	allRows[rowNumber] = row
 
-// 	file, err = os.Create(e.filePath)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer file.Close()
+	file, err = os.Create(e.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 
-// 	writer := csv.NewWriter(file)
-// 	err = writer.WriteAll(allRows)
-// 	if err != nil {
-// 		return err
-// 	}
+	writer := csv.NewWriter(file)
+	err = writer.WriteAll(allRows)
+	if err != nil {
+		return err
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
-// func (e *Excel) ReplaceHeader(header []string) error {
-// 	file, err := os.Open(e.filePath)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer file.Close()
+func (h *Header) ReplaceRow(primaryKey string, row []string) error {
+	file, err := os.Open(h.excel.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 
-// 	header = append([]string{"id"}, header...)
-// 	reader := csv.NewReader(file)
-// 	allRows, err := reader.ReadAll()
-// 	if err != nil {
-// 		return err
-// 	}
+	rowNumber, err := h.excel.getRowNumFromId(primaryKey)
+	if err != nil {
+		return err
+	}
+	if rowNumber == -1 {
+		return errors.New("an error occured")
+	}
 
-// 	validateHeader, err := e.IsHeaderExist()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if !validateHeader {
-// 		return errors.New("header not available")
-// 	}
+	reader := csv.NewReader(file)
+	allRows, err := reader.ReadAll()
+	if err != nil {
+		return err
+	}
 
-// 	allRows[0] = header
+	if rowNumber < 0 || rowNumber >= len(allRows) {
+		return errors.New("row number out of range")
+	}
 
-// 	file, err = os.Create(e.filePath)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer file.Close()
+	if h.excel.primaryKey == "auto_id" {
+		rowToAdd := make([]string, len(row))
+		for i:=0; i<len(h.headers); i++ {
+			rowToAdd[h.excel.headersMap[h.headers[i]]-1] =  row[i]
+		}
+		row = append([]string{primaryKey}, rowToAdd...)
+	} else{
+		rowToAdd := make([]string, len(row))
+		for i:=0; i<len(h.headers); i++ {
+			rowToAdd[h.excel.headersMap[h.headers[i]]] =  row[i]
+		}
+		row = rowToAdd
+	}
+	allRows[rowNumber] = row
 
-// 	writer := csv.NewWriter(file)
-// 	err = writer.WriteAll(allRows)
-// 	if err != nil {
-// 		return err
-// 	}
+	file, err = os.Create(h.excel.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 
-// 	return nil
-// }
+	writer := csv.NewWriter(file)
+	err = writer.WriteAll(allRows)
+	if err != nil {
+		return err
+	}
+	return nil
+}

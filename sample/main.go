@@ -8,10 +8,14 @@ import (
 
 func main() {
 	csvPath := "csv.csv"
-	configPath := "config.json"
-	excelFile, _ := excel.NewExcel(csvPath, configPath)
-	err := excelFile.AddHeader("auto", []string{"name", "age"})
+	excelFile, _ := excel.InitExcel(csvPath, "age", true)
+	headers := make(map[string]string, 3)
+	headers["age"] = "new_age"
+	headers["name"] = "new_name"
+	headers["gpa"] = "new_gpa"
+	err := excelFile.ReplaceHeaderName(headers)
 	if err!= nil{
 		fmt.Println(err)
 	}
+	err := excelFile.AddRow()
 }
