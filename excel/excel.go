@@ -51,6 +51,20 @@ func (e *Excel) GetAllRows() ([][]string, error) {
 	return rows, nil
 }
 
+func (e *Excel) checkPrimaryKey(primaryKey string) bool {
+	if e.primaryKey == "auto_id" {
+		return false
+	}
+	primaryKeyPosition := e.headersMap[e.primaryKey]
+	rows, _ := e.GetAllRows()
+	for _, row := range rows {
+		if row[primaryKeyPosition] == primaryKey {
+			return true
+		}
+	}
+	return false
+}
+
 func (e *Excel) buildHeaderMap(headers []string) map[string]int {
 	headersMap := make(map[string]int)
 	if e.primaryKey == "auto_id" {
@@ -114,10 +128,15 @@ func (e *Excel) ReplaceHeaderName(headers map[string]string) error {
 	if err != nil {
 		return err
 	}
-	e.headersMap = e.buildHeaderMap(rows[0])
 
 	if !e.isHeaderExist {
 		return errors.New("header not present")
+	}
+
+	if e.primaryKey == "auto_id" {
+		e.headersMap = e.buildHeaderMap(rows[0][1:])
+	} else {
+		e.headersMap = e.buildHeaderMap(rows[0])
 	}
 
 	newHeaders := make([]string, len(e.headersMap))
@@ -134,7 +153,11 @@ func (e *Excel) ReplaceHeaderName(headers map[string]string) error {
 		}
 		delete(e.headersMap, key)
 		e.headersMap[value] = val
-		newHeaders[val] = value
+		if e.primaryKey == "auto_id" {
+			newHeaders[val-1] = value
+		} else {
+			newHeaders[val] = value
+		}
 	}
 
 	file, err := os.Create(e.filePath)
@@ -168,6 +191,11 @@ func (e *Excel) AddRow(row []string) error {
 			currentId = totalRows
 		}
 		row = append([]string{strconv.Itoa(currentId)}, row...)
+	} else {
+		isPrimaryKeyDuplicated := e.checkPrimaryKey(row[e.headersMap[e.primaryKey]])
+		if isPrimaryKeyDuplicated {
+			return errors.New("primary key duplicated")
+		}
 	}
 	rows = append(rows, row)
 
@@ -200,16 +228,20 @@ func (h *Header) AddRow(row []string) error {
 		} else {
 			currentId = totalRows
 		}
-		for i:=0; i<len(h.headers); i++ {
-			rowToAdd[h.excel.headersMap[h.headers[i]]-1] =  row[i]
+		for i := 0; i < len(h.headers); i++ {
+			rowToAdd[h.excel.headersMap[h.headers[i]]-1] = row[i]
 		}
 		row = append([]string{strconv.Itoa(currentId)}, rowToAdd...)
-	} else{
+	} else {
 		rowToAdd := make([]string, len(row))
-		for i:=0; i<len(h.headers); i++ {
-			rowToAdd[h.excel.headersMap[h.headers[i]]] =  row[i]
+		for i := 0; i < len(h.headers); i++ {
+			rowToAdd[h.excel.headersMap[h.headers[i]]] = row[i]
 		}
 		row = rowToAdd
+		isPrimaryKeyDuplicated := h.excel.checkPrimaryKey(row[h.excel.headersMap[h.excel.primaryKey]])
+		if isPrimaryKeyDuplicated {
+			return errors.New("primary key duplicated")
+		}
 	}
 	rows = append(rows, row)
 
@@ -228,8 +260,11 @@ func (h *Header) AddRow(row []string) error {
 }
 
 func (e *Excel) Columns(headers []string) *Header {
-	e.header.headers = headers
-	e.header.excel = e
+	newHeader := &Header{
+		headers: headers,
+		excel:   e,
+	}
+	e.header = newHeader
 	return e.header
 }
 
@@ -360,14 +395,14 @@ func (h *Header) ReplaceRow(primaryKey string, row []string) error {
 
 	if h.excel.primaryKey == "auto_id" {
 		rowToAdd := make([]string, len(row))
-		for i:=0; i<len(h.headers); i++ {
-			rowToAdd[h.excel.headersMap[h.headers[i]]-1] =  row[i]
+		for i := 0; i < len(h.headers); i++ {
+			rowToAdd[h.excel.headersMap[h.headers[i]]-1] = row[i]
 		}
 		row = append([]string{primaryKey}, rowToAdd...)
-	} else{
+	} else {
 		rowToAdd := make([]string, len(row))
-		for i:=0; i<len(h.headers); i++ {
-			rowToAdd[h.excel.headersMap[h.headers[i]]] =  row[i]
+		for i := 0; i < len(h.headers); i++ {
+			rowToAdd[h.excel.headersMap[h.headers[i]]] = row[i]
 		}
 		row = rowToAdd
 	}
