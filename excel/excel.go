@@ -458,6 +458,52 @@ func (h *Header) ReplaceRow(primaryKey string, row []string) error {
 	return nil
 }
 
+func (e *Excel) UpdateValue(primaryKey, header, value string) error {
+	if header == e.primaryKey{
+		return errors.New("primary key can't be updated")
+	}
+	
+	file, err := os.Open(e.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	rowNumber, err := e.getRowNumFromId(primaryKey)
+	if err != nil {
+		return err
+	}
+	if rowNumber == -1 {
+		return errors.New("an error occured")
+	}
+
+	reader := csv.NewReader(file)
+	allRows, err := reader.ReadAll()
+	if err != nil {
+		return err
+	}
+
+	if rowNumber < 0 || rowNumber >= len(allRows) {
+		return errors.New("row number out of range")
+	}
+
+	allRows[rowNumber][e.headersMap[header]] = value
+
+	file, err = os.Create(e.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	err = writer.WriteAll(allRows)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (e *Excel) DeleteRows(primaryKeys []string) error {
 	file, err := os.Open(e.filePath)
 	if err != nil {
