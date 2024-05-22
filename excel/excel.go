@@ -199,7 +199,7 @@ func (e *Excel) ReplaceHeaderName(headers map[string]string) error {
 		}
 		delete(e.headersMap, key)
 		e.headersMap[value] = val
-			newHeaders[val] = value
+		newHeaders[val] = value
 	}
 
 	file, err := os.Create(e.filePath)
