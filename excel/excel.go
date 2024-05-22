@@ -2,23 +2,13 @@ package excel
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"errors"
+	"io"
 	"os"
+	"sort"
 	"strconv"
 )
-
-type Header struct {
-	headers []string
-	excel   *Excel
-}
-
-type Excel struct {
-	filePath      string
-	primaryKey    string
-	isHeaderExist bool
-	headersMap    map[string]int
-	header        *Header
-}
 
 func InitExcel(filePath string, primaryKey string, isHeaderExist bool) (*Excel, error) {
 	_, err := os.Stat(filePath)
@@ -28,12 +18,68 @@ func InitExcel(filePath string, primaryKey string, isHeaderExist bool) (*Excel, 
 			return nil, err
 		}
 	}
-	if primaryKey == "auto" {
-		primaryKey = "auto_id"
+
+	configPath := "config.json"
+	if primaryKey == "auto_id" {
+		_, err = os.Stat(configPath)
+		if os.IsNotExist(err) {
+			_, err := os.Create(configPath)
+			if err != nil {
+				return nil, err
+			}
+			config := make(map[string]int, 0)
+			config["AUTO_ID"] = 0
+			jsonData, err := json.MarshalIndent(config, "", "  ")
+			if err != nil {
+				return nil, err
+			}
+
+			err = os.WriteFile(configPath, jsonData, 0644)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
-	return &Excel{filePath: filePath, primaryKey: primaryKey,
+	return &Excel{filePath: filePath, configPath: configPath, primaryKey: primaryKey,
 		isHeaderExist: isHeaderExist, headersMap: nil, header: nil}, nil
+}
+
+func (e *Excel) checkAndIncrementAutoID() (int, error) {
+	file, err := os.Open(e.configPath)
+	if err != nil {
+		return -1, err
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return -1, err
+	}
+
+	var config map[string]int
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		return -1, err
+	}
+
+	autoID, ok := config["AUTO_ID"]
+	if !ok {
+		autoID = 0
+	}
+
+	config["AUTO_ID"] = autoID+1
+	jsonData, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return -1, err
+	}
+
+	err = os.WriteFile(e.configPath, jsonData, 0644)
+	if err != nil {
+		return -1, err
+	}
+
+	return autoID, nil
 }
 
 func (e *Excel) GetAllRows() ([][]string, error) {
@@ -183,12 +229,9 @@ func (e *Excel) AddRow(row []string) error {
 	}
 
 	if e.primaryKey == "auto_id" {
-		totalRows := len(rows)
-		currentId := 0
-		if e.isHeaderExist {
-			currentId = totalRows - 1
-		} else {
-			currentId = totalRows
+		currentId, err := e.checkAndIncrementAutoID()
+		if err != nil {
+			return err
 		}
 		row = append([]string{strconv.Itoa(currentId)}, row...)
 	} else {
@@ -221,12 +264,9 @@ func (h *Header) AddRow(row []string) error {
 
 	if h.excel.primaryKey == "auto_id" {
 		rowToAdd := make([]string, len(row))
-		totalRows := len(rows)
-		currentId := 0
-		if h.excel.isHeaderExist {
-			currentId = totalRows - 1
-		} else {
-			currentId = totalRows
+		currentId, err := h.excel.checkAndIncrementAutoID()
+		if err != nil {
+			return err
 		}
 		for i := 0; i < len(h.headers); i++ {
 			rowToAdd[h.excel.headersMap[h.headers[i]]-1] = row[i]
@@ -419,5 +459,52 @@ func (h *Header) ReplaceRow(primaryKey string, row []string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (e *Excel) DeleteRows(primaryKeys []string) error {
+	file, err := os.Open(e.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	allRows, err := reader.ReadAll()
+	if err != nil {
+		return err
+	}
+
+	rowNumbers := make([]int, 0)
+	for _, primaryKey := range primaryKeys {
+		rowNumber, err := e.getRowNumFromId(primaryKey)
+		if err != nil {
+			return err
+		}
+		if rowNumber == -1 {
+			return errors.New("an error occured")
+		}
+		if rowNumber < 0 || rowNumber >= len(allRows) {
+			return errors.New("row number out of range")
+		}
+		rowNumbers = append(rowNumbers, rowNumber)
+	}
+	sort.Sort(sort.Reverse(sort.IntSlice(rowNumbers)))
+	for _, index := range rowNumbers {
+		allRows = append(allRows[:index], allRows[index+1:]...)
+	}
+
+	file, err = os.Create(e.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	err = writer.WriteAll(allRows)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
