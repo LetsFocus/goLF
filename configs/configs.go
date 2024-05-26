@@ -8,22 +8,19 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func findConfigsDir(dir string) (string, error) {
-	depth := 0
-	maxDepth := 3
+func findConfigsDir(dir string, depth, maxDepth int) (string, error) {
 	configsDir := filepath.Join(dir, "configs")
 	if _, err := os.Stat(configsDir); err == nil {
 		return configsDir, nil
 	}
-	if depth < maxDepth {
-		parentDir := filepath.Dir(dir)
-		if parentDir == dir {
-			return "", os.ErrNotExist
-		}
-		depth++
-		findConfigsDir(parentDir)
+	if depth >= maxDepth {
+		return "", os.ErrNotExist
 	}
-	return "", os.ErrNotExist
+	parentDir := filepath.Dir(dir)
+	if parentDir == dir {
+		return "", os.ErrNotExist
+	}
+	return findConfigsDir(parentDir, depth-1, maxDepth)
 }
 
 func NewConfig(log *logger.CustomLogger) Config {
@@ -32,25 +29,24 @@ func NewConfig(log *logger.CustomLogger) Config {
 		log.Error("Unable to get current directory")
 		return Config{Log: log}
 	}
-	path, err := findConfigsDir(currentDir)
+	const maxDepth = 3
+	path, err := findConfigsDir(currentDir, 0, maxDepth)
 	if err != nil {
 		log.Infof("No configs directory found:%v", err)
-	} else {
-
-		envPath := filepath.Join(path, ".env")
-		if err := godotenv.Load(envPath); err != nil {
-			log.Error("No .env file found")
-		}
-		env := os.Getenv("APP_ENV")
-		appEnvPath := ""
-		if env != "" {
-			appEnvPath = filepath.Join(path, env, ".env")
-			if err := godotenv.Load(appEnvPath); err != nil {
-				log.Error("No app_env file found")
-			}
-		}
-		log.Infof("Logs are initialized path: %v", envPath)
 	}
+	envPath := filepath.Join(path, ".env")
+	if err := godotenv.Load(envPath); err != nil {
+		log.Error("No .env file found")
+	}
+	env := os.Getenv("APP_ENV")
+	appEnvPath := ""
+	if env != "" {
+		appEnvPath = filepath.Join(path, env, ".env")
+		if err := godotenv.Load(appEnvPath); err != nil {
+			log.Error("No app_env file found")
+		}
+	}
+	log.Infof("Logs are initialized path: %v", envPath)
 	return Config{Log: log}
 }
 
