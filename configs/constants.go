@@ -1,5 +1,5 @@
 package configs
 
 const (
-	maxDepth = 3
+	MAX_DEPTH = 3
 )
