@@ -8,29 +8,27 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func findConfigsDir(dir string, depth, maxDepth int) (string, error) {
-	configsDir := filepath.Join(dir, "configs")
-	if _, err := os.Stat(configsDir); err == nil {
-		return configsDir, nil
+func findConfigsDir(dir string) (string, error) {
+	for i := 0; i < maxDepth; i++ {
+		configsDir := filepath.Join(dir, "configs")
+		if _, err := os.Stat(configsDir); err == nil {
+			return configsDir, nil
+		}
+		parentDir := filepath.Dir(dir)
+		if parentDir == dir {
+			return "", os.ErrNotExist
+		}
+		dir = parentDir
 	}
-	if depth >= maxDepth {
-		return "", os.ErrNotExist
-	}
-	parentDir := filepath.Dir(dir)
-	if parentDir == dir {
-		return "", os.ErrNotExist
-	}
-	return findConfigsDir(parentDir, depth-1, maxDepth)
+	return "", os.ErrNotExist
 }
 
 func NewConfig(log *logger.CustomLogger) Config {
 	currentDir, err := os.Getwd()
 	if err != nil {
 		log.Error("Unable to get current directory")
-		return Config{Log: log}
 	}
-	const maxDepth = 3
-	path, err := findConfigsDir(currentDir, 0, maxDepth)
+	path, err := findConfigsDir(currentDir)
 	if err != nil {
 		log.Infof("No configs directory found:%v", err)
 	}
