@@ -1,5 +1,5 @@
 package configs
 
 const (
-	MAX_DEPTH = 3
+	MaxParentSearchDepth = 3
 )
