@@ -1,55 +1,84 @@
 package configs
 
 import (
-	"github.com/LetsFocus/goLF/errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/LetsFocus/goLF/logger"
 	"github.com/joho/godotenv"
+
+	"github.com/LetsFocus/goLF/logger"
+
+	"github.com/LetsFocus/goLF/errors"
 )
+
+// Config holds the configuration settings.
+type Config struct {
+	Log        *logger.CustomLogger
+	currentDir string
+	path       string
+	envPath    string
+}
 
 // NewConfig initializes and returns a new Config instance.
 func NewConfig(log *logger.CustomLogger) *Config {
-	currentDir, err := os.Getwd()
-	if err != nil {
+	config := &Config{Log: log}
+
+	if err := config.setCurrentDirectory(); err != nil {
 		log.Error("Unable to get current directory")
-		return &Config{}
+		return config
 	}
-	path, err := findConfigsDir(currentDir)
-	if err != nil {
-		log.Infof("No configs directory found:%v", err)
-		return &Config{}
+
+	if err := config.setConfigPath(); err != nil {
+		log.Infof("No configs directory found: %v", err)
+		return config
 	}
-	envPath := filepath.Join(path, ".env")
-	if !loadEnv(log, envPath) {
-		return &Config{}
+
+	if err := config.loadEnvironmentVariables(); err != nil {
+		log.Error(err.Error())
+		return config
 	}
+
+	log.Infof("Logs are initialized path: %v", config.envPath)
+	return config
+}
+
+// setCurrentDirectory sets the current directory in the config.
+func (c *Config) setCurrentDirectory() error {
+	var err error
+	c.currentDir, err = os.Getwd()
+	return err
+}
+
+// setConfigPath sets the path to the configuration directory.
+func (c *Config) setConfigPath() error {
+	var err error
+	c.path, err = findConfigsDir(c.currentDir)
+	return err
+}
+
+// loadEnvironmentVariables loads the environment variables from .env files.
+func (c *Config) loadEnvironmentVariables() error {
+	if !loadEnv(c.Log, filepath.Join(c.path, ".env")) {
+		return fmt.Errorf("failed to load main .env file")
+	}
+
 	env := os.Getenv("APP_ENV")
-	appEnvPath := ""
 	if env != "" {
-		appEnvPath = filepath.Join(path, env, ".env")
-		if !loadEnv(log, appEnvPath) {
-			return &Config{}
+		if !loadEnv(c.Log, filepath.Join(c.path, env, ".env")) {
+			return fmt.Errorf("failed to load app-specific .env file")
 		}
 	}
-	log.Infof("Logs are initialized path: %v", envPath)
-	return &Config{Log: log}
+
+	c.envPath = filepath.Join(c.path, ".env")
+	return nil
 }
 
-type Config struct {
-	Log *logger.CustomLogger
-}
-
-type Configs interface {
-	Get(key string) string
-}
-
-func (c Config) Get(key string) string {
+func (c *Config) Get(key string) string {
 	return os.Getenv(key)
 }
 
-func (c Config) GetOrDefault(key, defaultValue string) string {
+func (c *Config) GetOrDefault(key, defaultValue string) string {
 	if key == "" {
 		return defaultValue
 	}
@@ -66,10 +95,12 @@ func findConfigsDir(dir string) (string, error) {
 		if _, err := os.Stat(configsDir); err == nil {
 			return configsDir, nil
 		}
+
 		parentDir := filepath.Dir(dir)
 		if parentDir == dir {
 			return "", &errors.MissingDir{Param: "Configs"}
 		}
+
 		dir = parentDir
 	}
 	return "", &errors.MissingDir{Param: "Configs"}
@@ -81,5 +112,6 @@ func loadEnv(log *logger.CustomLogger, envPath string) bool {
 		log.Errorf("Unable to load .env file at path: %s", envPath)
 		return false
 	}
+
 	return true
 }
