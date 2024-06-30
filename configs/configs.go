@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -30,12 +29,12 @@ func NewConfig(log *logger.CustomLogger) *Config {
 	}
 
 	if err := config.setConfigPath(); err != nil {
-		log.Infof("No configs directory found: %v", err)
+		log.Errorf("No configs directory found: %v", err)
 		return config
 	}
 
 	if err := config.loadEnvironmentVariables(); err != nil {
-		log.Error(err.Error())
+		log.Errorf("Failed to load: %v", err)
 		return config
 	}
 
@@ -48,6 +47,7 @@ func (c *Config) setCurrentDirectory() error {
 	var err error
 	c.currentDir, err = os.Getwd()
 	return err
+
 }
 
 // setConfigPath sets the path to the configuration directory.
@@ -55,18 +55,19 @@ func (c *Config) setConfigPath() error {
 	var err error
 	c.path, err = findConfigsDir(c.currentDir)
 	return err
+
 }
 
 // loadEnvironmentVariables loads the environment variables from .env files.
 func (c *Config) loadEnvironmentVariables() error {
-	if !loadEnv(c.Log, filepath.Join(c.path, ".env")) {
-		return fmt.Errorf("failed to load main .env file")
+	if err := loadEnv(c.Log, filepath.Join(c.path, ".env")); err != nil {
+		return err
 	}
 
 	env := os.Getenv("APP_ENV")
 	if env != "" {
-		if !loadEnv(c.Log, filepath.Join(c.path, env, ".env")) {
-			return fmt.Errorf("failed to load app-specific .env file")
+		if err := loadEnv(c.Log, filepath.Join(c.path, env, ".env")); err != nil {
+			return err
 		}
 	}
 
@@ -107,11 +108,11 @@ func findConfigsDir(dir string) (string, error) {
 }
 
 // loadEnv attempts to load environment variables from a specified .env file.
-func loadEnv(log *logger.CustomLogger, envPath string) bool {
+func loadEnv(log *logger.CustomLogger, envPath string) error {
 	if err := godotenv.Load(envPath); err != nil {
 		log.Errorf("Unable to load .env file at path: %s", envPath)
-		return false
+		return err
 	}
 
-	return true
+	return nil
 }
