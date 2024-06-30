@@ -75,10 +75,12 @@ func (c *Config) loadEnvironmentVariables() error {
 	return nil
 }
 
+// Get retrieves the value of an environment variable given its key.
 func (c *Config) Get(key string) string {
 	return os.Getenv(key)
 }
 
+// GetOrDefault retrieves the value of an environment variable given its key, or returns a default value if the environment variable is not set or if the key is empty.
 func (c *Config) GetOrDefault(key, defaultValue string) string {
 	if key == "" {
 		return defaultValue
