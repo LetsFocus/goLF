@@ -44,7 +44,7 @@ func IsValidDate(dateStr string) bool {
 	return err == nil
 }
 
-// RemoveSliceDuplicates revomes the duplicate elements in a slice.
+// RemoveSliceDuplicates removes the duplicate elements in a slice.
 func RemoveSliceDuplicates(slice []interface{}) []interface{} {
 	encountered := map[interface{}]bool{}
 	result := []interface{}{}
@@ -84,7 +84,7 @@ func IntToStr(value int) string {
 	return val
 }
 
-// RendInt return a random integer from the range[0,n]
+// RandInt return a random integer from the range[0,n]
 func RandInt(a int) int {
 	return rand.Intn(a)
 }

@@ -13,7 +13,7 @@ import (
 
 type GoLF struct {
 	Database
-	Config  configs.Config
+	Config  *configs.Config
 	Logger  *logger.CustomLogger
 	Metrics *metrics.Metrics
 	*cmd.CLI

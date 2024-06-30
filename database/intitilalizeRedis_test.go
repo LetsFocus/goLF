@@ -19,7 +19,7 @@ func Test_InitializeRedis(t *testing.T) {
 	}{
 		{
 			input: &model.GoLF{
-				Config: configs.Config{Log: logger.NewCustomLogger()},
+				Config: &configs.Config{Log: logger.NewCustomLogger()},
 				Logger: logger.NewCustomLogger(),
 			},
 		},

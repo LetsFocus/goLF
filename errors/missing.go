@@ -40,3 +40,12 @@ type MissingParams struct {
 func (e *MissingParams) Error() string {
 	return fmt.Sprintf("Missing parameters: '%s'", strings.Join(e.Params, "', '"))
 }
+
+// MissingDir represents a 400 Bad Request error indicating a missing directory.
+type MissingDir struct {
+	Param string
+}
+
+func (e MissingDir) Error() string {
+	return fmt.Sprintf("Missing directory: '%s'", e.Param)
+}

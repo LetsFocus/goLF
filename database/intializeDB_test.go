@@ -68,7 +68,7 @@ func Test_InitializeDB(t *testing.T) {
 	}{
 		{
 			input: &model.GoLF{
-				Config: configs.Config{Log: logger.NewCustomLogger()},
+				Config: &configs.Config{Log: logger.NewCustomLogger()},
 				Logger: logger.NewCustomLogger(),
 			},
 		},
@@ -97,7 +97,7 @@ func Test_MonitoringDB(t *testing.T) {
 			desc: "successfully monitored the db",
 			input: &model.GoLF{
 				Database: model.Database{Postgres: db},
-				Config:   configs.Config{Log: logger.NewCustomLogger()},
+				Config:   &configs.Config{Log: logger.NewCustomLogger()},
 				Logger:   logger.NewCustomLogger(),
 			},
 			dbConfig: dbConfig{host: "localhost", port: "5432", user: "postgres", password: "password",
@@ -111,7 +111,7 @@ func Test_MonitoringDB(t *testing.T) {
 			desc: "retry is less than retryCount",
 			input: &model.GoLF{
 				Database: model.Database{Postgres: db},
-				Config:   configs.Config{Log: logger.NewCustomLogger()},
+				Config:   &configs.Config{Log: logger.NewCustomLogger()},
 				Logger:   logger.NewCustomLogger(),
 			},
 			dbConfig: dbConfig{host: "localhost", port: "5432", user: "postgres", password: "password",
@@ -125,7 +125,7 @@ func Test_MonitoringDB(t *testing.T) {
 			desc: "DbConfigs are invalid",
 			input: &model.GoLF{
 				Database: model.Database{Postgres: db},
-				Config:   configs.Config{Log: logger.NewCustomLogger()},
+				Config:   &configs.Config{Log: logger.NewCustomLogger()},
 				Logger:   logger.NewCustomLogger(),
 			},
 			dbConfig: dbConfig{host: "localhost", port: "5432", user: "postgres", password: "password",

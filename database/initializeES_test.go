@@ -43,7 +43,7 @@ func Test_InitializeES(t *testing.T) {
 	}{
 		{
 			input: &model.GoLF{
-				Config: configs.Config{Log: logger.NewCustomLogger()},
+				Config: &configs.Config{Log: logger.NewCustomLogger()},
 				Logger: logger.NewCustomLogger(),
 			},
 		},
@@ -65,7 +65,7 @@ func Test_InitializeDBWithMonitoring(t *testing.T) {
 	}{
 		{
 			input: &model.GoLF{
-				Config: configs.Config{Log: logger.NewCustomLogger()},
+				Config: &configs.Config{Log: logger.NewCustomLogger()},
 				Logger: logger.NewCustomLogger(),
 			},
 		},
@@ -92,7 +92,7 @@ func Test_monitoringES(t *testing.T) {
 			desc: "successfully monitored the es",
 			input: &model.GoLF{
 				Database: model.Database{Elasticsearch: es1},
-				Config:   configs.Config{Log: logger.NewCustomLogger()},
+				Config:   &configs.Config{Log: logger.NewCustomLogger()},
 				Logger:   logger.NewCustomLogger(),
 			},
 			esConfig: esConfig{addresses: []string{"http://localhost:9200"}, username: "", password: ""},
@@ -103,7 +103,7 @@ func Test_monitoringES(t *testing.T) {
 			desc: "retry is less than retryCount",
 			input: &model.GoLF{
 				Database: model.Database{Elasticsearch: es2},
-				Config:   configs.Config{Log: logger.NewCustomLogger()},
+				Config:   &configs.Config{Log: logger.NewCustomLogger()},
 				Logger:   logger.NewCustomLogger(),
 			},
 			esConfig: esConfig{addresses: []string{"http://localhost:9100"}, username: "", password: "", maxRetries: 1, retryDuration: 1},
