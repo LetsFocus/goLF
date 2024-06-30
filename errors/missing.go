@@ -46,6 +46,6 @@ type MissingDir struct {
 	Param string
 }
 
-func (e *MissingDir) Error() string {
+func (e MissingDir) Error() string {
 	return fmt.Sprintf("Missing directory: '%s'", e.Param)
 }

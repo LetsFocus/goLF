@@ -99,12 +99,12 @@ func findConfigsDir(dir string) (string, error) {
 
 		parentDir := filepath.Dir(dir)
 		if parentDir == dir {
-			return "", &errors.MissingDir{Param: "Configs"}
+			return "", errors.MissingDir{Param: "Configs"}
 		}
 
 		dir = parentDir
 	}
-	return "", &errors.MissingDir{Param: "Configs"}
+	return "", errors.MissingDir{Param: "Configs"}
 }
 
 // loadEnv attempts to load environment variables from a specified .env file.
